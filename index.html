@@ -80,7 +80,7 @@
       </div>
     </div>
 
-    <!-- Mode Tab Navigation -->
+    <!-- Tab Navigation -->
     <div class="flex border-b border-slate-200 gap-4">
       <button onclick="switchTab('search')" id="tabBtnSearch" class="pb-3 text-sm font-semibold text-emerald-700 border-b-2 border-emerald-600 flex items-center gap-1.5">
         <i data-lucide="search" class="w-4 h-4"></i>
@@ -161,10 +161,12 @@
               <i data-lucide="activity" class="w-4 h-4 text-emerald-600"></i>
               <h3 class="font-bold text-sm text-slate-800">1. ไวรัสตับอักเสบ บี (ตรวจแล็บ & การรับวัคซีน)</h3>
             </div>
-            <span id="pLabCheckDate" class="text-xs text-slate-500">วันที่ตรวจ: -</span>
+            <span id="pLabCheckDate" class="text-xs font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+              วันที่ตรวจ: -
+            </span>
           </div>
 
-          <!-- Lab Results Grid: แสดงเมื่อมีผลอย่างน้อย 1 ตัว ถ้าไม่มีเลยกล่องนี้จะถูกซ่อน -->
+          <!-- Lab Results Grid: แสดงเมื่อมีผลแล็บอย่างน้อย 1 ตัว ถ้าไม่มีเลยกล่องนี้จะถูกซ่อน -->
           <div id="labGridContainer" class="grid grid-cols-3 gap-2 text-center text-xs">
             <div class="p-2.5 bg-slate-50 rounded-lg border">
               <span class="text-slate-400 block mb-0.5">HBsAg (ตรวจเชื้อ)</span>
@@ -180,7 +182,7 @@
             </div>
           </div>
 
-          <!-- Notice แสดงเฉพาะคนที่ไม่มีผลแล็บ Y, Z, AA เลย -->
+          <!-- Notice แสดงเมื่อไม่มีผลแล็บ Y, Z, AA เลย -->
           <div id="noLabNotice" class="hidden p-3 bg-slate-50 border border-dashed border-slate-300 rounded-lg text-xs text-slate-500 text-center">
             ไม่มีบันทึกผลการตรวจแล็บ HBsAg / HBsAb / HBcAb ในระบบ
           </div>
@@ -188,7 +190,7 @@
           <div class="bg-slate-50 p-3 rounded-lg text-xs space-y-1 text-slate-700 border">
             <div><b>ผลสรุปไวรัสตับอักเสบบี:</b> <span id="pSummaryHeb" class="text-emerald-800 font-medium">-</span></div>
             <div><b>ประวัติการฉีด Hep B (OccMed):</b> <span id="pHepPlanSummary">-</span></div>
-            <div><b>ประวัติแหล่งอื่น:</b> <span id="pHepSourceOther">-</span></div>
+            <div><b>ประวัติ Heb จากแหล่งอื่น:</b> <span id="pHepSourceOther">-</span></div>
           </div>
 
           <div class="grid grid-cols-3 gap-2 text-center text-xs">
@@ -288,6 +290,7 @@
                 <th class="p-3">ชื่อ - นามสกุล</th>
                 <th class="p-3">HN</th>
                 <th class="p-3">ตำแหน่ง / หน่วยงาน</th>
+                <th class="p-3">การตรวจ Hep B</th>
                 <th class="p-3">สถานะ Hep B</th>
                 <th class="p-3">สถานะสุกใส</th>
                 <th class="p-3">คำแนะนำ / การดำเนินการ</th>
@@ -330,14 +333,43 @@
       return `<span class="badge-none px-2 py-0.5 rounded text-xs">${val}</span>`;
     }
 
+    // ฟังก์ชันจัดรูปแบบวันที่ตรวจตาม 3 ระดับความละเอียด (V, W, X)
+    function getHebDateFormatted(d) {
+      let v = cleanVal(d['ปีที่ตรวจ Heb (จาก OH)']);
+      if (v.endsWith('.0')) v = v.replace('.0', '');
+      
+      const w = cleanVal(d['ระบุวันตรวจ Heb']);
+      const x = cleanVal(d['ประวัติ Heb จากแหล่งอื่น']);
+
+      // 1. มีปีที่ตรวจ (V) เป็นหลัก
+      if (v !== '-') {
+        // ถ้ามีวันที่ตรวจ (W) และไม่ซ้ำกับปี ให้ใส่วงเล็บต่อท้าย
+        if (w !== '-' && w !== v) {
+          return `ปี ${v} (${w})`;
+        }
+        return `ปี ${v}`;
+      }
+      
+      // 2. ถ้าไม่มีปีที่ตรวจเลย ให้แสดงประวัติจากแหล่งอื่น (X)
+      if (x !== '-') {
+        return x;
+      }
+
+      // กรณีมีเฉพาะ W แต่ไม่มี V และ X
+      if (w !== '-') {
+        return w;
+      }
+
+      return 'ไม่มีบันทึกข้อมูลการตรวจ';
+    }
+
     // ================== LOGIC ประมวลผลคำแนะนำ ==================
     function evaluateVaccineStatus(d) {
-      // Y, Z, AA
       const hbsAg = String(d['HbsAg'] || '').toLowerCase();
       const hbsAb = String(d['HbsAb'] || '').toLowerCase();
       const hbcAb = String(d['HBcAB'] || '').toLowerCase();
 
-      // ตรวจสอบว่ามีผลแล็บอย่างน้อย 1 ตัวหรือไม่
+      // ตรวจสอบว่ามีผลแล็บ Y, Z, AA อย่างน้อย 1 ตัวหรือไม่
       const hasAnyLab = cleanVal(d['HbsAg']) !== '-' || cleanVal(d['HbsAb']) !== '-' || cleanVal(d['HBcAB']) !== '-';
 
       const hepSummary = String(d['ผลสรุปไวรัสตับอักเสบบี'] || '');
@@ -352,11 +384,11 @@
       let isHepBImmune = false;
 
       // 1. เกณฑ์ Hepatitis B
-      // ถ้า HbsAb เป็น Positive หรือ Weakly Positive หรือระบุมีภูมิแล้ว -> ไม่ต้องรับวัคซีน
+      // ถ้ามีผลว่ามีภูมิ (HbsAb เป็น Pos/Weakly Pos หรือระบุมีภูมิแล้ว) -> เข้าเกณฑ์ไม่ต้องรับวัคซีนอีก
       if (hbsAb.includes('pos') || hepSummary.includes('มีภูมิคุ้มกัน') || hepPlan.includes('มีภูมิคุ้มกัน')) {
         isHepBImmune = true;
       } 
-      // ถ้าไม่มีภูมิเลย (HbsAb เป็น Negative และไม่ได้ติดเชื้อ) หรือระบุว่าต้องการ/ไม่มีภูมิ -> ควรได้รับวัคซีน
+      // ถ้าไม่มีภูมิเลย (HbsAb Negative และไม่ติดเชื้อ) หรือต้องการตรวจ/ไม่มีภูมิ -> เข้าเกณฑ์ควรได้รับวัคซีน
       else if (hbsAb.includes('neg') && !hbsAg.includes('pos')) {
         needHepB = true;
         needHepBReason = 'HBsAb Negative (ไม่มีภูมิคุ้มกัน)';
@@ -393,6 +425,7 @@
 
       return {
         hasAnyLab,
+        dateFormatted: getHebDateFormatted(d),
         needHepB,
         needHepBReason,
         isHepBImmune,
@@ -544,20 +577,10 @@
       document.getElementById('pCitizenId').innerText = formatId(p['เลขประจำตัวประชาชน']);
       document.getElementById('pDob').innerText = cleanVal(p['วันเกิด']);
 
-      // วันที่ตรวจ Heb: เช็ค W (ระบุวันตรวจ) และ V (ปีที่ตรวจ)
-      const dateW = cleanVal(p['ระบุวันตรวจ Heb']);
-      const yearV = cleanVal(p['ปีที่ตรวจ Heb (จาก OH)']);
-      let dateDisplayText = '-';
-      if (dateW !== '-') {
-        dateDisplayText = yearV !== '-' ? `${dateW} (ปี ${yearV})` : dateW;
-      } else if (yearV !== '-') {
-        dateDisplayText = `ปี ${yearV}`;
-      } else {
-        dateDisplayText = 'ไม่ระบุวันที่ตรวจ';
-      }
-      document.getElementById('pLabCheckDate').innerText = `วันที่ตรวจ: ${dateDisplayText}`;
+      // แสดงวันที่ตรวจที่จัดรูปแบบแล้ว
+      document.getElementById('pLabCheckDate').innerText = `การตรวจ Hep B: ${ev.dateFormatted}`;
 
-      // การแสดงผลแล็บ Y, Z, AA (ถ้าไม่มีเลย ให้ซ่อนตารางแล็บ)
+      // การแสดงผลแล็บ Y, Z, AA (ถ้าไม่มีผลแล็บเลย จะซ่อนกล่องนี้แล้วแสดงแถบแจ้งเตือนแทน)
       const labGrid = document.getElementById('labGridContainer');
       const noLabNotice = document.getElementById('noLabNotice');
 
@@ -574,7 +597,6 @@
 
       document.getElementById('pSummaryHeb').innerText = cleanVal(p['ผลสรุปไวรัสตับอักเสบบี']);
       document.getElementById('pHepPlanSummary').innerText = cleanVal(p['สรุปการได้รับฉีดวัคซีน Hep B (ระบุปีที่ฉีดเข็ม 1?) - ข้อมูลจาก Occmed/Plan/IC']);
-      // X: ประวัติ Heb จากแหล่งอื่น
       document.getElementById('pHepSourceOther').innerText = cleanVal(p['ประวัติ Heb จากแหล่งอื่น']);
       document.getElementById('pHepD1').innerText = cleanVal(p['Hep B เข็ม 1']);
       document.getElementById('pHepD2').innerText = cleanVal(p['Hep B เข็ม 2']);
@@ -616,7 +638,7 @@
       document.getElementById('actionFilterCount').innerText = `พบ ${list.length} คน`;
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400">ไม่มีรายชื่อที่ต้องดำเนินการในเงื่อนไขนี้</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">ไม่มีรายชื่อที่ต้องดำเนินการในเงื่อนไขนี้</td></tr>`;
         return;
       }
 
@@ -630,10 +652,11 @@
             <td class="p-3 text-center text-slate-400">${idx + 1}</td>
             <td class="p-3 font-semibold text-slate-800 whitespace-nowrap">${fullName}</td>
             <td class="p-3 font-mono text-slate-600">${d['HN'] || '-'}</td>
-            <td class="p-3 max-w-[200px] truncate" title="${d['ตำแหน่งสายงาน']} (${d['หน่วยงาน']})">
+            <td class="p-3 max-w-[180px] truncate" title="${d['ตำแหน่งสายงาน']} (${d['หน่วยงาน']})">
               <div class="font-medium text-slate-700 truncate">${d['ตำแหน่งสายงาน'] || '-'}</div>
               <div class="text-[10px] text-slate-400 truncate">${d['หน่วยงาน'] || '-'}</div>
             </td>
+            <td class="p-3 text-slate-600 font-medium whitespace-nowrap">${ev.dateFormatted}</td>
             <td class="p-3">
               ${ev.isHepBImmune ? '<span class="text-emerald-700 font-medium">มีภูมิแล้ว</span>' : 
                 (ev.needHepB ? `<span class="text-orange-700 font-semibold">${ev.needHepBReason}</span>` : '<span class="text-slate-400">-</span>')}
@@ -697,6 +720,7 @@
         'ชื่อ-สกุล': `${item.raw['คำนำหน้า'] || ''}${item.raw['ชื่อ'] || ''} ${item.raw['นามสกุล'] || ''}`.trim(),
         'ตำแหน่ง': item.raw['ตำแหน่งสายงาน'],
         'หน่วยงาน': item.raw['หน่วยงาน'],
+        'การตรวจ Hep B': item.eval.dateFormatted,
         'สถานะ Hep B': item.eval.needHepB ? item.eval.needHepBReason : (item.eval.isHepBImmune ? 'มีภูมิแล้ว' : '-'),
         'สถานะสุกใส': item.eval.needVaricella ? item.eval.needVaricellaReason : (item.eval.isVaricellaImmune ? 'มีภูมิ/เคยป่วย' : '-'),
         'คำแนะนำการฉีด': item.eval.actions.join(' | ')
