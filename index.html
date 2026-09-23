@@ -600,6 +600,37 @@
     }
 
     function parseDateString(str) {
+      if (!str || str === '-' || str === 'undefined' || str === 'null') return null;
+      let s = String(str).trim();
+      
+      // กรณี DD/MM/YYYY (เช่น 10/08/2569 หรือ 10/8/2569)
+      if (s.includes('/')) {
+        const parts = s.split('/');
+        if (parts.length >= 3) {
+          const d = parseInt(parts[0], 10);
+          const m = parseInt(parts[1], 10) - 1;
+          let y = parseInt(parts[2], 10);
+          if (y > 2400) y -= 543; // แปลง พ.ศ. เป็น ค.ศ.
+          const dt = new Date(y, m, d);
+          if (!isNaN(dt.getTime())) return dt;
+        }
+      }
+      
+      // กรณี YYYY-MM-DD (เช่น 2569-08-10 หรือ 1969-08-10)
+      if (s.includes('-')) {
+        const parts = s.split('-');
+        if (parts.length >= 3) {
+          let y = parseInt(parts[0], 10);
+          if (y === 1969) y = 2026; // แก้ไขกรณีบันทึกปี 1969 ผิดจาก 2569
+          else if (y > 2400) y -= 543;
+          const m = parseInt(parts[1], 10) - 1;
+          const d = parseInt(parts[2], 10);
+          const dt = new Date(y, m, d);
+          if (!isNaN(dt.getTime())) return dt;
+        }
+      }
+      return null;
+    }
       if (!str || str === '-') return null;
       let s = str.trim();
       if (s.includes('-')) {
@@ -752,15 +783,16 @@
         else policyReason = 'ยังไม่มีภูมิคุ้มกัน Hep B';
       }
 
-      // 2. ดึงข้อมูล สุกใส (U ถึง X)
-      const varDose1U = getColValue(d, 'U', ['สุกใส เข็ม 1', 'สุกใส1']);
-      const varDose2V = getColValue(d, 'V', ['สุกใส เข็ม 2', 'สุกใส2']);
-      const varSummaryW = getColValue(d, 'W', ['สรุปการได้รับฉีดวัคซีนสุกใส', 'สรุปสุกใส']);
+      // 2. ดึงข้อมูล สุกใส (คอลัมน์ U, V, W, X) ด้วยการสแกนคำค้นหาแบบละเอียด
+      const varDose1U = getColValue(d, 'U', ['สุกใส เข็ม 1', 'สุกใสเข็ม 1', 'สุกใส เข็ม1', 'สุกใส1']);
+      const varDose2V = getColValue(d, 'V', ['สุกใส เข็ม 2', 'สุกใสเข็ม 2', 'สุกใส เข็ม2', 'สุกใส2']);
+      const varSummaryW = getColValue(d, 'W', ['สรุปการได้รับฉีดวัคซีนสุกใส', 'สรุปสุกใส', 'สุกใส']);
       const varNoteX = getColValue(d, 'X', ['หมายเหตุ(สุกใส)', 'หมายเหตุ']);
 
+      // ตรวจนับจำนวนเข็ม
       let varDosesGiven = 0;
-      if (varDose1U !== '-') varDosesGiven++;
-      if (varDose2V !== '-') varDosesGiven++;
+      if (varDose1U !== '-' && varDose1U !== '') varDosesGiven++;
+      if (varDose2V !== '-' && varDose2V !== '') varDosesGiven++;
 
       let varRemainingText = '';
       let varEstimateText = '-';
@@ -768,12 +800,12 @@
 
       if (varDosesGiven === 2) {
         varRemainingText = 'ฉีดครบ 2 เข็มแล้ว';
-        varEstimateText = 'ได้รับวัคซีนครบถ้วนตามโปรแกรมแล้ว';
+        varEstimateText = 'ได้รับครบถ้วนตามโปรแกรมแล้ว';
       } else if (varDosesGiven === 1) {
         varRemainingText = 'เหลือเข็มที่ 2';
         if (dateVar1) {
           const est2 = new Date(dateVar1.getTime());
-          est2.setDate(est2.getDate() + 28);
+          est2.setDate(est2.getDate() + 28); // เข็ม 2 ฉีดห่างจากเข็ม 1 อย่างน้อย 4 สัปดาห์ (28 วัน)
           varEstimateText = `เข็มที่ 2 ประมาณ ${formatThaiMonthYear(est2)} (อย่างน้อย 4-8 สัปดาห์หลังเข็ม 1)`;
         } else {
           varEstimateText = 'เข็มที่ 2 ห่างจากเข็ม 1 อย่างน้อย 4-8 สัปดาห์';
@@ -783,9 +815,11 @@
         varEstimateText = 'รอการจัดสรรวัคซีนรอบใหม่';
       }
 
-      const hasVarSummaryW = varSummaryW !== '-';
-      const isVarSick = varNoteX.includes('เคยป่วย');
-      const isVarInProgress = (varDosesGiven === 1);
+      // ตรรกะการจัดสรรวัคซีนสุกใส:
+      // ถ้าคอลัมน์ W มีข้อมูล (เช่น เลขปี พ.ศ., เคยฉีดไม่ทราบปี, ได้รับแล้วปี..., มีภูมิคุ้มกันแล้ว) หรือหมายเหตุระบุว่า "เคยป่วย" -> ไม่ต้องจัดสรร
+      const hasVarSummaryW = varSummaryW !== '-' && varSummaryW !== '';
+      const isVarSick = varNoteX.includes('เคยป่วย') || varSummaryW.includes('เคยป่วย');
+      const isVarInProgress = (varDosesGiven === 1); // ฉีดเข็ม 1 แล้ว แต่ยังไม่ฉีดเข็ม 2
       const isVarSafe = (hasVarSummaryW || isVarSick || varDosesGiven === 2) && !isVarInProgress;
       const needNewVarAllocation = !isVarSafe && !isVarInProgress;
 
@@ -796,12 +830,12 @@
       if (isVarInProgress) {
         varPolicyCategory = 'IN_PROGRESS';
         varPolicyTitle = 'อยู่ระหว่างการรับวัคซีนจากกลุ่มงาน (สุกใส)';
-        varPolicyReason = `ฉีดแล้ว 1/2 เข็ม (${varRemainingText})`;
+        varPolicyReason = `ฉีดเข็ม 1 แล้ว (${varDose1U}) - เหลือเข็มที่ 2`;
       } else if (isVarSafe) {
         varPolicyCategory = 'SAFE';
-        varPolicyTitle = 'ไม่ต้องจัดสรรวัคซีนสุกใสให้อีก';
-        if (varDosesGiven === 2) varPolicyReason = 'ได้รับวัคซีนครบ 2 เข็มแล้ว (U, V ครบถ้วน)';
-        else if (isVarSick) varPolicyReason = 'เคยป่วยเป็นโรคสุกใสแล้ว (มีภูมิธรรมชาติ)';
+        varPolicyTitle = 'กลุ่มงานไม่ได้จัดสรรวัคซีนสุกใสให้อีก';
+        if (varDosesGiven === 2) varPolicyReason = `ได้รับวัคซีนครบ 2 เข็มแล้ว (${varDose1U}, ${varDose2V})`;
+        else if (isVarSick) varPolicyReason = 'เคยป่วยเป็นโรคสุกใสแล้ว (มีภูมิคุ้มกันตามธรรมชาติ)';
         else varPolicyReason = `มีบันทึกในระบบ (${varSummaryW})`;
       } else {
         varPolicyCategory = 'NEED_NEW';
