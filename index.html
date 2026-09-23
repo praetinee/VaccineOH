@@ -60,14 +60,14 @@
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
         <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
         <div>
-          <div class="text-[11px] text-slate-500 font-medium">มีภูมิ / ฉีดครบ 3 เข็ม</div>
+          <div class="text-[11px] text-slate-500 font-medium">มีภูมิ / ฉีดครบแล้ว</div>
           <div id="statSafeHepB" class="text-xl font-bold text-emerald-600">-</div>
         </div>
       </div>
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
         <div class="p-2.5 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="clock" class="w-5 h-5"></i></div>
         <div>
-          <div class="text-[11px] text-slate-500 font-medium">อยู่ระหว่างรับวัคซีน (เข็ม 1-2)</div>
+          <div class="text-[11px] text-slate-500 font-medium">อยู่ระหว่างรับวัคซีน</div>
           <div id="statInProgress" class="text-xl font-bold text-blue-600">-</div>
         </div>
       </div>
@@ -88,7 +88,7 @@
       </button>
       <button onclick="switchTab('action')" id="tabBtnAction" class="pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
         <i data-lucide="list-checks" class="w-4 h-4"></i>
-        <span>รายชื่อผู้ควรได้รับการจัดสรร / อยู่ระหว่างรับวัคซีน Hep B</span>
+        <span>รายชื่อผู้ควรได้รับการจัดสรร / ติดตาม</span>
         <span id="actionCountBadge" class="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
       </button>
     </div>
@@ -118,7 +118,7 @@
           <i data-lucide="user-search" class="w-7 h-7"></i>
         </div>
         <h3 class="text-sm font-semibold text-slate-700">ค้นหารายชื่อเจ้าหน้าที่</h3>
-        <p class="text-xs text-slate-400 mt-1">พิมพ์คำค้นหาด้านบน เพื่อดูสรุปคำแนะนำและประวัติการรับวัคซีน Hep B แบบละเอียด</p>
+        <p class="text-xs text-slate-400 mt-1">พิมพ์คำค้นหาด้านบน เพื่อดูสรุปคำแนะนำและประวัติการรับวัคซีน Hep B และ สุกใส แบบละเอียด</p>
       </div>
 
       <div id="profileContainer" class="hidden space-y-5">
@@ -287,6 +287,96 @@
           </div>
         </div>
 
+        <!-- ==================== VARICELLA TRACKER (คอลัมน์ U -> X) ==================== -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-3">
+            <div class="flex items-center gap-2.5">
+              <div class="p-2 bg-blue-100 text-blue-700 rounded-xl">
+                <i data-lucide="shield" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-800 text-base">วัคซีนป้องกันโรคสุกใส (Varicella Tracker)</h3>
+                <p class="text-xs text-slate-500" id="varOverviewSub">สถานะ: กำลังประมวลผล...</p>
+              </div>
+            </div>
+            
+            <button onclick="toggleVarHistory()" id="btnToggleVar" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50 text-xs font-semibold text-slate-700 hover:text-blue-700 transition w-fit">
+              <span id="toggleTextVar">ดูประวัติแบบละเอียด</span>
+              <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200" id="toggleIconVar"></i>
+            </button>
+          </div>
+
+          <!-- สรุปด่วนด้านบน (Quick Summary) -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <span class="text-slate-400 block mb-0.5">ประวัติเดิม / หมายเหตุ (W, X)</span>
+              <span id="quickVarNote" class="font-bold text-slate-800 text-sm">-</span>
+            </div>
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <span class="text-slate-400 block mb-0.5">ประวัติการฉีด (เข็ม 1-2)</span>
+              <span id="quickVarDoseProgress" class="font-bold text-slate-800 text-sm">-</span>
+            </div>
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200" id="quickVarCard">
+              <span class="text-slate-500 block mb-0.5 font-medium">สถานะการดูแลจากกลุ่มงาน</span>
+              <span id="quickVarStatus" class="font-bold text-sm">-</span>
+            </div>
+          </div>
+
+          <!-- ไทม์ไลน์ย่อ-ขยาย -->
+          <div id="varHistoryTimeline" class="hidden pt-3 border-t border-slate-100 space-y-4">
+            
+            <!-- 1. ข้อมูลสรุปในระบบเดิม & หมายเหตุ (W, X) -->
+            <div class="flex items-start gap-3 text-xs">
+              <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 font-bold">1</div>
+              <div class="flex-1 bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                <div class="font-bold text-slate-700">ประวัติการรับวัคซีนเดิม & หมายเหตุ (คอลัมน์ W, X)</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div class="p-2.5 bg-white rounded-lg border">
+                    <span class="text-[10px] text-slate-400 block">สรุปวัคซีนสุกใสในระบบ (คอลัมน์ W)</span>
+                    <span id="tVarSummaryW" class="font-semibold text-slate-800 block mt-0.5">-</span>
+                  </div>
+                  <div class="p-2.5 bg-white rounded-lg border">
+                    <span class="text-[10px] text-slate-400 block">หมายเหตุ / ประวัติป่วย (คอลัมน์ X)</span>
+                    <span id="tVarNoteX" class="font-semibold text-slate-800 block mt-0.5">-</span>
+                  </div>
+                </div>
+                <p class="text-[11px] text-slate-400">
+                  * ตรรกะ: หากมีข้อมูลในคอลัมน์ W หรือหมายเหตุระบุว่า "เคยป่วย" กลุ่มงานจะไม่จัดสรรวัคซีนสุกใสให้อีก
+                </p>
+              </div>
+            </div>
+
+            <!-- 2. ประวัติการฉีดเข็ม 1 - 2 (U, V) -->
+            <div class="flex items-start gap-3 text-xs">
+              <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 font-bold">2</div>
+              <div class="flex-1 bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2.5">
+                <div class="font-bold text-slate-700">ประวัติการได้รับวัคซีนสุกใส เข็ม 1 - 2 (คอลัมน์ U, V)</div>
+                <div class="grid grid-cols-2 gap-2 text-center">
+                  <div class="p-2.5 bg-white rounded-lg border">
+                    <span class="text-slate-400 block text-[10px]">สุกใส เข็มที่ 1 (คอลัมน์ U)</span>
+                    <span id="tVarDose1" class="font-semibold text-slate-800 block mt-0.5">-</span>
+                  </div>
+                  <div class="p-2.5 bg-white rounded-lg border">
+                    <span class="text-slate-400 block text-[10px]">สุกใส เข็มที่ 2 (คอลัมน์ V)</span>
+                    <span id="tVarDose2" class="font-semibold text-slate-800 block mt-0.5">-</span>
+                  </div>
+                </div>
+
+                <div class="p-3 bg-white rounded-lg border border-blue-100 space-y-1 text-slate-700">
+                  <div class="flex items-center justify-between">
+                    <span>สถานะการฉีด: <b id="tVarDoseSummaryText" class="text-slate-800">-</b></span>
+                    <span id="tVarRemainingText" class="font-bold">-</span>
+                  </div>
+                  <div class="text-[11px] text-slate-500 pt-0.5">
+                    <b>ประมาณการกำหนดฉีด:</b> <span id="tVarEstimateText" class="font-medium text-slate-700">-</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -296,7 +386,7 @@
         <div class="flex items-center gap-2">
           <select id="actionFilterSelect" onchange="renderActionTable()" class="text-xs border border-slate-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 font-medium">
             <option value="ALL">ทั้งหมดที่ต้องติดตาม (อยู่ระหว่างรับวัคซีน + รอจัดสรรใหม่)</option>
-            <option value="IN_PROGRESS">เฉพาะผู้ที่อยู่ระหว่างการรับวัคซีนจากกลุ่มงาน (ฉีดแล้ว 1-2 เข็ม)</option>
+            <option value="IN_PROGRESS">เฉพาะผู้ที่อยู่ระหว่างการรับวัคซีนจากกลุ่มงาน (Hep B / สุกใส)</option>
             <option value="NEED_NEW">เฉพาะผู้ที่รอการจัดสรรวัคซีนรอบใหม่ (ยังไม่เริ่มฉีด)</option>
           </select>
           <span id="actionFilterCount" class="text-xs text-slate-500 font-medium"></span>
@@ -317,9 +407,9 @@
                 <th class="p-3">HN</th>
                 <th class="p-3">ตำแหน่ง / หน่วยงาน</th>
                 <th class="p-3">สถานะการดูแล</th>
-                <th class="p-3">ความคืบหน้า (R-T)</th>
-                <th class="p-3">เจตจำนง (L)</th>
-                <th class="p-3">HBsAb (O)</th>
+                <th class="p-3">ความคืบหน้า Hep B</th>
+                <th class="p-3">ความคืบหน้า สุกใส</th>
+                <th class="p-3">การดำเนินการที่แนะนำ</th>
                 <th class="p-3 text-center">ดูข้อมูล</th>
               </tr>
             </thead>
@@ -366,6 +456,22 @@
       const timeline = document.getElementById('hepBHistoryTimeline');
       const icon = document.getElementById('toggleIcon');
       const text = document.getElementById('toggleText');
+
+      if (timeline.classList.contains('hidden')) {
+        timeline.classList.remove('hidden');
+        icon.classList.add('rotate-180');
+        text.innerText = 'ย่อประวัติ';
+      } else {
+        timeline.classList.add('hidden');
+        icon.classList.remove('rotate-180');
+        text.innerText = 'ดูประวัติแบบละเอียด';
+      }
+    }
+
+    function toggleVarHistory() {
+      const timeline = document.getElementById('varHistoryTimeline');
+      const icon = document.getElementById('toggleIconVar');
+      const text = document.getElementById('toggleTextVar');
 
       if (timeline.classList.contains('hidden')) {
         timeline.classList.remove('hidden');
@@ -449,18 +555,17 @@
 
     // ================== LOGIC ประมวลผลคำแนะนำ ==================
     function evaluateVaccineStatus(d) {
+      // 1. ดึงข้อมูล Hep B (L ถึง T)
       const intentL = getColValue(d, 'L', ['เจตจำนง', 'ผลสรุปไวรัสตับอักเสบบี']);
       const yearM = getColValue(d, 'M', ['ปีที่ตรวจ Hep', 'ปีที่ตรวจ Heb']);
       const hbsAgN = getColValue(d, 'N', ['HbsAg']);
       const hbsAbO = getColValue(d, 'O', ['HbsAb']);
       const hbcAbP = getColValue(d, 'P', ['HBcAB']);
       const summaryQ = getColValue(d, 'Q', ['สรุปการได้รับฉีดวัคซีน Hep B']);
-      
       const dose1R = getColValue(d, 'R', ['Hep B เข็ม 1', 'เข็ม 1']);
       const dose2S = getColValue(d, 'S', ['Hep B เข็ม 2', 'เข็ม 2']);
       const dose3T = getColValue(d, 'T', ['Hep B เข็ม 3', 'เข็ม 3']);
 
-      // คำนวณจำนวนเข็มที่ฉีดใน R, S, T
       let dosesGiven = 0;
       if (dose1R !== '-') dosesGiven++;
       if (dose2S !== '-') dosesGiven++;
@@ -503,31 +608,25 @@
         estimateText = 'รอการจัดสรรวัคซีนรอบใหม่';
       }
 
-      // ================== ตรรกะใหม่ OccMed / IC Policy ==================
-      // 1. ตรวจสอบว่า "อยู่ระหว่างการรับวัคซีนจากกลุ่มงาน" หรือไม่ (มีข้อมูลใน R, S, T แต่ยังไม่ครบ 3 เข็ม)
       const isInProgress = (dosesGiven > 0 && dosesGiven < 3);
-
-      // 2. ตรวจสอบว่า "มีภูมิคุ้มกันแล้ว / ไม่ต้องจัดสรร" หรือไม่
       const hasSummaryQ = summaryQ !== '-';
       const isHbsAbPos = hbsAbO.toLowerCase().includes('pos');
       const isComplete3Doses = (dosesGiven === 3);
       const isSafe = (hasSummaryQ || isHbsAbPos || isComplete3Doses) && !isInProgress;
-
-      // 3. ตรวจสอบว่า "ควรได้รับการจัดสรรรอบใหม่" หรือไม่ (ยังไม่เริ่มฉีด + ไม่มีภูมิ + Q ว่าง)
       const needNewAllocation = !isSafe && !isInProgress;
 
       let policyTitle = '';
-      let policyCategory = ''; // 'SAFE', 'IN_PROGRESS', 'NEED_NEW'
+      let policyCategory = '';
       let policyReason = '';
 
       if (isInProgress) {
         policyCategory = 'IN_PROGRESS';
         policyTitle = 'อยู่ระหว่างการรับวัคซีนจากกลุ่มงาน';
-        policyReason = `ได้รับวัคซีนแล้ว ${dosesGiven}/3 เข็ม (${remainingText})`;
+        policyReason = `Hep B ได้รับแล้ว ${dosesGiven}/3 เข็ม (${remainingText})`;
       } else if (isSafe) {
         policyCategory = 'SAFE';
         policyTitle = 'กลุ่มงานไม่ได้จัดสรรวัคซีน Hep B ให้เพิ่มอีก';
-        if (isComplete3Doses) policyReason = 'ได้รับวัคซีนครบ 3 เข็มแล้ว (R, S, T ครบถ้วน)';
+        if (isComplete3Doses) policyReason = 'ได้รับวัคซีน Hep B ครบ 3 เข็มแล้ว';
         else if (isHbsAbPos) policyReason = 'ตรวจพบภูมิคุ้มกันแล้ว (HBsAb Positive)';
         else policyReason = `มีบันทึกในระบบ (${summaryQ})`;
       } else {
@@ -535,7 +634,64 @@
         policyTitle = 'ควรได้รับการจัดสรรวัคซีนรอบใหม่';
         if (hbsAbO.toLowerCase().includes('neg')) policyReason = 'HBsAb Negative (ไม่มีภูมิคุ้มกัน)';
         else if (intentL.includes('ต้องการ') || intentL.includes('ขอรับ')) policyReason = `เจตจำนงระบุ: ${intentL}`;
-        else policyReason = 'ยังไม่มีภูมิคุ้มกัน และยังไม่ได้เริ่มรับวัคซีน';
+        else policyReason = 'ยังไม่มีภูมิคุ้มกัน Hep B';
+      }
+
+      // 2. ดึงข้อมูล สุกใส (U ถึง X)
+      const varDose1U = getColValue(d, 'U', ['สุกใส เข็ม 1', 'สุกใส1']);
+      const varDose2V = getColValue(d, 'V', ['สุกใส เข็ม 2', 'สุกใส2']);
+      const varSummaryW = getColValue(d, 'W', ['สรุปการได้รับฉีดวัคซีนสุกใส', 'สรุปสุกใส']);
+      const varNoteX = getColValue(d, 'X', ['หมายเหตุ(สุกใส)', 'หมายเหตุ']);
+
+      let varDosesGiven = 0;
+      if (varDose1U !== '-') varDosesGiven++;
+      if (varDose2V !== '-') varDosesGiven++;
+
+      let varRemainingText = '';
+      let varEstimateText = '-';
+      const dateVar1 = parseDateString(varDose1U);
+
+      if (varDosesGiven === 2) {
+        varRemainingText = 'ฉีดครบ 2 เข็มแล้ว';
+        varEstimateText = 'ได้รับวัคซีนครบถ้วนตามโปรแกรมแล้ว';
+      } else if (varDosesGiven === 1) {
+        varRemainingText = 'เหลือเข็มที่ 2';
+        if (dateVar1) {
+          const est2 = new Date(dateVar1.getTime());
+          est2.setDate(est2.getDate() + 28);
+          varEstimateText = `เข็มที่ 2 ประมาณ ${formatThaiMonthYear(est2)} (อย่างน้อย 4-8 สัปดาห์หลังเข็ม 1)`;
+        } else {
+          varEstimateText = 'เข็มที่ 2 ห่างจากเข็ม 1 อย่างน้อย 4-8 สัปดาห์';
+        }
+      } else {
+        varRemainingText = 'ยังไม่ได้เริ่มฉีด (เหลือ 2 เข็ม)';
+        varEstimateText = 'รอการจัดสรรวัคซีนรอบใหม่';
+      }
+
+      const hasVarSummaryW = varSummaryW !== '-';
+      const isVarSick = varNoteX.includes('เคยป่วย');
+      const isVarInProgress = (varDosesGiven === 1);
+      const isVarSafe = (hasVarSummaryW || isVarSick || varDosesGiven === 2) && !isVarInProgress;
+      const needNewVarAllocation = !isVarSafe && !isVarInProgress;
+
+      let varPolicyCategory = '';
+      let varPolicyTitle = '';
+      let varPolicyReason = '';
+
+      if (isVarInProgress) {
+        varPolicyCategory = 'IN_PROGRESS';
+        varPolicyTitle = 'อยู่ระหว่างการรับวัคซีนจากกลุ่มงาน (สุกใส)';
+        varPolicyReason = `ฉีดแล้ว 1/2 เข็ม (${varRemainingText})`;
+      } else if (isVarSafe) {
+        varPolicyCategory = 'SAFE';
+        varPolicyTitle = 'ไม่ต้องจัดสรรวัคซีนสุกใสให้อีก';
+        if (varDosesGiven === 2) varPolicyReason = 'ได้รับวัคซีนครบ 2 เข็มแล้ว (U, V ครบถ้วน)';
+        else if (isVarSick) varPolicyReason = 'เคยป่วยเป็นโรคสุกใสแล้ว (มีภูมิธรรมชาติ)';
+        else varPolicyReason = `มีบันทึกในระบบ (${varSummaryW})`;
+      } else {
+        varPolicyCategory = 'NEED_NEW';
+        varPolicyTitle = 'ควรได้รับการจัดสรรวัคซีนสุกใสรอบใหม่';
+        varPolicyReason = 'ยังไม่มีประวัติป่วย และยังไม่ได้รับวัคซีน';
       }
 
       const hasAnyLab = hbsAgN !== '-' || hbsAbO !== '-' || hbcAbP !== '-';
@@ -560,7 +716,22 @@
         needNewAllocation,
         policyCategory,
         policyTitle,
-        policyReason
+        policyReason,
+
+        // ตัวแปรสุกใส
+        varDose1U,
+        varDose2V,
+        varSummaryW,
+        varNoteX,
+        varDosesGiven,
+        varRemainingText,
+        varEstimateText,
+        isVarInProgress,
+        isVarSafe,
+        needNewVarAllocation,
+        varPolicyCategory,
+        varPolicyTitle,
+        varPolicyReason
       };
     }
 
@@ -593,15 +764,14 @@
       }));
 
       document.getElementById('statTotal').innerText = staffData.length.toLocaleString();
-      const safeCount = processedList.filter(p => p.eval.policyCategory === 'SAFE').length;
-      const inProgressCount = processedList.filter(p => p.eval.policyCategory === 'IN_PROGRESS').length;
-      const needNewCount = processedList.filter(p => p.eval.policyCategory === 'NEED_NEW').length;
+      const safeCount = processedList.filter(p => p.eval.policyCategory === 'SAFE' && p.eval.varPolicyCategory === 'SAFE').length;
+      const inProgressCount = processedList.filter(p => p.eval.isInProgress || p.eval.isVarInProgress).length;
+      const needNewCount = processedList.filter(p => p.eval.needNewAllocation || p.eval.needNewVarAllocation).length;
 
       document.getElementById('statSafeHepB').innerText = safeCount.toLocaleString();
       document.getElementById('statInProgress').innerText = inProgressCount.toLocaleString();
       document.getElementById('statNeedNewAllocation').innerText = needNewCount.toLocaleString();
       
-      // ผู้ที่ต้องติดตามในแท็บ 2 คือทั้งกลุ่มอยู่ระหว่างฉีด และกลุ่มรอจัดสรรใหม่
       document.getElementById('actionCountBadge').innerText = inProgressCount + needNewCount;
 
       renderActionTable();
@@ -661,12 +831,12 @@
 
       dropdown.innerHTML = matches.map(m => {
         let tag = '';
-        if (m.eval.policyCategory === 'IN_PROGRESS') {
+        if (m.eval.isInProgress || m.eval.isVarInProgress) {
           tag = '<span class="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-semibold">อยู่ระหว่างรับวัคซีน</span>';
-        } else if (m.eval.policyCategory === 'NEED_NEW') {
+        } else if (m.eval.needNewAllocation || m.eval.needNewVarAllocation) {
           tag = '<span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">รอจัดสรรใหม่</span>';
         } else {
-          tag = '<span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-semibold">ไม่ต้องจัดสรร</span>';
+          tag = '<span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-semibold">ครบถ้วน</span>';
         }
 
         return `
@@ -700,37 +870,32 @@
       const recList = document.getElementById('recommendationList');
       const quickCard = document.getElementById('quickAllocationCard');
 
-      if (ev.policyCategory === 'IN_PROGRESS') {
+      let actionItems = [];
+      if (ev.isInProgress) actionItems.push(`<b>Hep B:</b> อยู่ระหว่างรับวัคซีน (${ev.policyReason}) - ${ev.estimateText}`);
+      else if (ev.needNewAllocation) actionItems.push(`<b>Hep B:</b> ควรได้รับการจัดสรรรอบใหม่ (${ev.policyReason})`);
+      else actionItems.push(`<b>Hep B:</b> ${ev.policyReason}`);
+
+      if (ev.isVarInProgress) actionItems.push(`<b>สุกใส:</b> อยู่ระหว่างรับวัคซีน (${ev.varPolicyReason}) - ${ev.varEstimateText}`);
+      else if (ev.needNewVarAllocation) actionItems.push(`<b>สุกใส:</b> ควรได้รับการจัดสรรรอบใหม่ (${ev.varPolicyReason})`);
+      else actionItems.push(`<b>สุกใส:</b> ${ev.varPolicyReason}`);
+
+      if (ev.isInProgress || ev.isVarInProgress) {
         recCard.className = 'p-5 rounded-2xl border badge-inprogress flex items-start gap-4';
         recIcon.innerHTML = `<i data-lucide="clock" class="w-6 h-6 text-blue-600"></i>`;
-        recTitle.innerText = ev.policyTitle;
+        recTitle.innerText = 'มีรายการที่อยู่ระหว่างการรับวัคซีนจากกลุ่มงาน';
         recTitle.className = 'text-base font-bold text-blue-800 mt-0.5';
-        recList.innerHTML = `<li>${ev.policyReason}</li><li>กำหนดนัด: ${ev.estimateText}</li>`;
-        
-        quickCard.className = 'p-3 bg-blue-50 rounded-xl border border-blue-200';
-        document.getElementById('quickAllocationStatus').innerText = 'อยู่ระหว่างรับวัคซีน';
-        document.getElementById('quickAllocationStatus').className = 'font-bold text-sm text-blue-800';
-      } else if (ev.policyCategory === 'NEED_NEW') {
+      } else if (ev.needNewAllocation || ev.needNewVarAllocation) {
         recCard.className = 'p-5 rounded-2xl border badge-action flex items-start gap-4';
         recIcon.innerHTML = `<i data-lucide="alert-circle" class="w-6 h-6 text-orange-600"></i>`;
-        recTitle.innerText = ev.policyTitle;
+        recTitle.innerText = 'มีรายการที่รอการจัดสรรวัคซีนรอบใหม่';
         recTitle.className = 'text-base font-bold text-orange-800 mt-0.5';
-        recList.innerHTML = `<li>${ev.policyReason}</li>`;
-
-        quickCard.className = 'p-3 bg-amber-50 rounded-xl border border-amber-200';
-        document.getElementById('quickAllocationStatus').innerText = 'ควรได้รับการจัดสรรรอบใหม่';
-        document.getElementById('quickAllocationStatus').className = 'font-bold text-sm text-amber-800';
       } else {
         recCard.className = 'p-5 rounded-2xl border badge-safe flex items-start gap-4';
         recIcon.innerHTML = `<i data-lucide="check-circle" class="w-6 h-6 text-emerald-600"></i>`;
-        recTitle.innerText = ev.policyTitle;
+        recTitle.innerText = 'ประวัติวัคซีนครบถ้วน / ไม่ต้องจัดสรรเพิ่มในขณะนี้';
         recTitle.className = 'text-base font-bold text-emerald-800 mt-0.5';
-        recList.innerHTML = `<li>${ev.policyReason}</li>`;
-
-        quickCard.className = 'p-3 bg-emerald-50 rounded-xl border border-emerald-200';
-        document.getElementById('quickAllocationStatus').innerText = 'ไม่ต้องจัดสรรให้อีก';
-        document.getElementById('quickAllocationStatus').className = 'font-bold text-sm text-emerald-800';
       }
+      recList.innerHTML = actionItems.map(item => `<li>${item}</li>`).join('');
 
       // Demographic
       document.getElementById('pAvatar').innerText = (p['ชื่อ'] || '').substring(0, 2);
@@ -746,13 +911,23 @@
       document.getElementById('quickHbsAb').innerHTML = renderLabBadge(ev.hbsAbO);
       document.getElementById('quickDoseProgress').innerText = `ฉีดแล้ว ${ev.dosesGiven} / 3 เข็ม`;
 
-      // 1. เจตจำนง (คอลัมน์ L)
-      document.getElementById('tSurveyIntent').innerText = ev.intentL;
+      if (ev.policyCategory === 'IN_PROGRESS') {
+        quickCard.className = 'p-3 bg-blue-50 rounded-xl border border-blue-200';
+        document.getElementById('quickAllocationStatus').innerText = 'อยู่ระหว่างรับวัคซีน';
+        document.getElementById('quickAllocationStatus').className = 'font-bold text-sm text-blue-800';
+      } else if (ev.policyCategory === 'NEED_NEW') {
+        quickCard.className = 'p-3 bg-amber-50 rounded-xl border border-amber-200';
+        document.getElementById('quickAllocationStatus').innerText = 'รอจัดสรรรอบใหม่';
+        document.getElementById('quickAllocationStatus').className = 'font-bold text-sm text-amber-800';
+      } else {
+        quickCard.className = 'p-3 bg-emerald-50 rounded-xl border border-emerald-200';
+        document.getElementById('quickAllocationStatus').innerText = 'ไม่ต้องจัดสรรให้อีก';
+        document.getElementById('quickAllocationStatus').className = 'font-bold text-sm text-emerald-800';
+      }
 
-      // 2. ปีที่เจาะตรวจ (คอลัมน์ M)
+      document.getElementById('tSurveyIntent').innerText = ev.intentL;
       document.getElementById('tYearM').innerText = ev.yearM !== '-' ? `ปี ${ev.yearM}` : 'ไม่มีข้อมูลปีที่ตรวจ';
 
-      // 3. ผลแล็บ (N, O, P) & สรุป (Q)
       const labGrid = document.getElementById('labGridContainer');
       const noLabNotice = document.getElementById('noLabNotice');
       if (ev.hasAnyLab) {
@@ -767,8 +942,6 @@
       }
 
       document.getElementById('tSummaryQ').innerText = ev.summaryQ !== '-' ? ev.summaryQ : 'ไม่มีข้อมูลบันทึกในคอลัมน์นี้';
-
-      // 4. เข็ม 1, 2, 3 (R, S, T)
       document.getElementById('tDose1').innerText = ev.dose1R;
       document.getElementById('tDose2').innerText = ev.dose2S;
       document.getElementById('tDose3').innerText = ev.dose3T;
@@ -779,6 +952,40 @@
       document.getElementById('hepBHistoryTimeline').classList.add('hidden');
       document.getElementById('toggleIcon').classList.remove('rotate-180');
       document.getElementById('toggleText').innerText = 'ดูประวัติแบบละเอียด';
+
+      // ================== VARICELLA POPULATE (U -> X) ==================
+      document.getElementById('varOverviewSub').innerText = `${ev.varPolicyTitle} (${ev.varPolicyReason})`;
+      let quickVarNoteText = ev.varNoteX !== '-' ? ev.varNoteX : (ev.varSummaryW !== '-' ? ev.varSummaryW : 'ไม่มีประวัติป่วย/บันทึก');
+      document.getElementById('quickVarNote').innerText = quickVarNoteText;
+      document.getElementById('quickVarDoseProgress').innerText = `ฉีดแล้ว ${ev.varDosesGiven} / 2 เข็ม`;
+
+      const quickVarCard = document.getElementById('quickVarCard');
+      const quickVarStatus = document.getElementById('quickVarStatus');
+      if (ev.varPolicyCategory === 'IN_PROGRESS') {
+        quickVarCard.className = 'p-3 bg-blue-50 rounded-xl border border-blue-200';
+        quickVarStatus.className = 'font-bold text-sm text-blue-800';
+        quickVarStatus.innerText = 'อยู่ระหว่างรับวัคซีน';
+      } else if (ev.varPolicyCategory === 'NEED_NEW') {
+        quickVarCard.className = 'p-3 bg-amber-50 rounded-xl border border-amber-200';
+        quickVarStatus.className = 'font-bold text-sm text-amber-800';
+        quickVarStatus.innerText = 'รอจัดสรรรอบใหม่';
+      } else {
+        quickVarCard.className = 'p-3 bg-emerald-50 rounded-xl border border-emerald-200';
+        quickVarStatus.className = 'font-bold text-sm text-emerald-800';
+        quickVarStatus.innerText = 'ไม่ต้องจัดสรรให้อีก';
+      }
+
+      document.getElementById('tVarSummaryW').innerText = ev.varSummaryW !== '-' ? ev.varSummaryW : 'ไม่มีข้อมูลบันทึก';
+      document.getElementById('tVarNoteX').innerText = ev.varNoteX !== '-' ? ev.varNoteX : 'ไม่มีบันทึกหมายเหตุ';
+      document.getElementById('tVarDose1').innerText = ev.varDose1U;
+      document.getElementById('tVarDose2').innerText = ev.varDose2V;
+      document.getElementById('tVarDoseSummaryText').innerText = `ฉีดแล้ว ${ev.varDosesGiven} เข็ม`;
+      document.getElementById('tVarRemainingText').innerText = ev.varRemainingText;
+      document.getElementById('tVarEstimateText').innerText = ev.varEstimateText;
+
+      document.getElementById('varHistoryTimeline').classList.add('hidden');
+      document.getElementById('toggleIconVar').classList.remove('rotate-180');
+      document.getElementById('toggleTextVar').innerText = 'ดูประวัติแบบละเอียด';
 
       document.getElementById('emptyState').classList.add('hidden');
       document.getElementById('profileContainer').classList.remove('hidden');
@@ -791,10 +998,11 @@
       const tbody = document.getElementById('actionTableBody');
 
       let list = processedList.filter(p => {
-        if (filterType === 'IN_PROGRESS') return p.eval.isInProgress;
-        if (filterType === 'NEED_NEW') return p.eval.needNewAllocation;
-        // ALL = อยู่ระหว่างรับวัคซีน + รอจัดสรรใหม่
-        return p.eval.isInProgress || p.eval.needNewAllocation;
+        const hasInProgress = p.eval.isInProgress || p.eval.isVarInProgress;
+        const hasNeedNew = p.eval.needNewAllocation || p.eval.needNewVarAllocation;
+        if (filterType === 'IN_PROGRESS') return hasInProgress;
+        if (filterType === 'NEED_NEW') return hasNeedNew;
+        return hasInProgress || hasNeedNew;
       });
 
       document.getElementById('actionFilterCount').innerText = `(${list.length} คน)`;
@@ -810,28 +1018,38 @@
         const fullName = `${d['คำนำหน้า'] || ''}${d['ชื่อ'] || ''} ${d['นามสกุล'] || ''}`.trim();
 
         let statusBadge = '';
-        if (ev.isInProgress) {
+        if (ev.isInProgress || ev.isVarInProgress) {
           statusBadge = '<span class="badge-inprogress px-2 py-0.5 rounded text-[11px] font-bold">อยู่ระหว่างรับวัคซีน</span>';
         } else {
           statusBadge = '<span class="badge-action px-2 py-0.5 rounded text-[11px] font-bold">รอจัดสรรใหม่</span>';
         }
+
+        let actionDesc = [];
+        if (ev.isInProgress) actionDesc.push(`Hep B: ฉีดแล้ว ${ev.dosesGiven}/3`);
+        else if (ev.needNewAllocation) actionDesc.push(`Hep B: รอจัดสรร`);
+
+        if (ev.isVarInProgress) actionDesc.push(`สุกใส: ฉีดแล้ว ${ev.varDosesGiven}/2`);
+        else if (ev.needNewVarAllocation) actionDesc.push(`สุกใส: รอจัดสรร`);
 
         return `
           <tr class="hover:bg-slate-50 border-b transition">
             <td class="p-3 text-center text-slate-400">${idx + 1}</td>
             <td class="p-3 font-semibold text-slate-800 whitespace-nowrap">${fullName}</td>
             <td class="p-3 font-mono text-slate-600">${d['HN'] || '-'}</td>
-            <td class="p-3 max-w-[180px] truncate" title="${d['ตำแหน่งสายงาน']} (${d['หน่วยงาน']})">
+            <td class="p-3 max-w-[170px] truncate" title="${d['ตำแหน่งสายงาน']} (${d['หน่วยงาน']})">
               <div class="font-medium text-slate-700 truncate">${d['ตำแหน่งสายงาน'] || '-'}</div>
               <div class="text-[10px] text-slate-400 truncate">${d['หน่วยงาน'] || '-'}</div>
             </td>
             <td class="p-3 whitespace-nowrap">${statusBadge}</td>
             <td class="p-3 whitespace-nowrap text-slate-700">
-              <span class="font-semibold">ฉีดแล้ว ${ev.dosesGiven}/3</span>
+              <span class="font-semibold">${ev.dosesGiven}/3 เข็ม</span>
               <span class="text-[10px] text-slate-400 block">${ev.remainingText}</span>
             </td>
-            <td class="p-3 max-w-[140px] truncate" title="${ev.intentL}">${ev.intentL}</td>
-            <td class="p-3">${renderLabBadge(ev.hbsAbO)}</td>
+            <td class="p-3 whitespace-nowrap text-slate-700">
+              <span class="font-semibold">${ev.varDosesGiven}/2 เข็ม</span>
+              <span class="text-[10px] text-slate-400 block">${ev.varRemainingText}</span>
+            </td>
+            <td class="p-3 text-slate-700 font-medium">${actionDesc.join(' | ')}</td>
             <td class="p-3 text-center">
               <button onclick="goToPerson('${d['ลำดับ']}')" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white rounded border border-emerald-200 transition font-medium">
                 ดูประวัติ
@@ -870,9 +1088,11 @@
     function exportActionCSV() {
       const filterType = document.getElementById('actionFilterSelect').value;
       const list = processedList.filter(p => {
-        if (filterType === 'IN_PROGRESS') return p.eval.isInProgress;
-        if (filterType === 'NEED_NEW') return p.eval.needNewAllocation;
-        return p.eval.isInProgress || p.eval.needNewAllocation;
+        const hasInProgress = p.eval.isInProgress || p.eval.isVarInProgress;
+        const hasNeedNew = p.eval.needNewAllocation || p.eval.needNewVarAllocation;
+        if (filterType === 'IN_PROGRESS') return hasInProgress;
+        if (filterType === 'NEED_NEW') return hasNeedNew;
+        return hasInProgress || hasNeedNew;
       });
 
       const csvData = list.map(item => ({
@@ -880,15 +1100,12 @@
         'ชื่อ-สกุล': `${item.raw['คำนำหน้า'] || ''}${item.raw['ชื่อ'] || ''} ${item.raw['นามสกุล'] || ''}`.trim(),
         'ตำแหน่ง': item.raw['ตำแหน่งสายงาน'],
         'หน่วยงาน': item.raw['หน่วยงาน'],
-        'สถานะการดูแล': item.eval.isInProgress ? 'อยู่ระหว่างรับวัคซีน' : 'รอจัดสรรใหม่',
-        'ความคืบหน้า': `ฉีดแล้ว ${item.eval.dosesGiven}/3 (${item.eval.remainingText})`,
-        'เจตจำนง (L)': item.eval.intentL,
-        'ปีที่เจาะตรวจ (M)': item.eval.yearM,
-        'HBsAb (O)': item.eval.hbsAbO,
-        'เข็ม 1 (R)': item.eval.dose1R,
-        'เข็ม 2 (S)': item.eval.dose2S,
-        'เข็ม 3 (T)': item.eval.dose3T,
-        'กำหนดนัดโดยประมาณ': item.eval.estimateText
+        'สถานะ Hep B': item.eval.policyTitle,
+        'ความคืบหน้า Hep B (R-T)': `ฉีดแล้ว ${item.eval.dosesGiven}/3 (${item.eval.remainingText})`,
+        'สถานะ สุกใส': item.eval.varPolicyTitle,
+        'ความคืบหน้า สุกใส (U-V)': `ฉีดแล้ว ${item.eval.varDosesGiven}/2 (${item.eval.varRemainingText})`,
+        'หมายเหตุสุกใส (X)': item.eval.varNoteX,
+        'สรุปสุกใส (W)': item.eval.varSummaryW
       }));
 
       const csv = Papa.unparse(csvData);
@@ -896,7 +1113,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `รายชื่อติดตามวัคซีน_HepB_${new Date().toISOString().slice(0,10)}.csv`;
+      a.download = `รายชื่อติดตามวัคซีน_HepB_Varicella_${new Date().toISOString().slice(0,10)}.csv`;
       a.click();
     }
 
