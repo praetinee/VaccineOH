@@ -232,7 +232,6 @@
                   ไม่มีบันทึกผลแล็บ HBsAg / HBsAb / HBcAb ในระบบ
                 </div>
 
-                <!-- สรุปผลจากคอลัมน์ Q -->
                 <div class="p-3 bg-white rounded-lg border border-slate-200 space-y-1">
                   <div class="flex items-start justify-between gap-2">
                     <span class="font-semibold text-slate-600">สรุปการได้รับฉีดวัคซีน Hep B (คอลัมน์ Q):</span>
@@ -316,8 +315,9 @@
   </main>
 
   <script>
+    // อัปเดต GID ใหม่ตามลิงก์ที่ระบุ
     const SPREADSHEET_ID = '10S_z8e-xYBmzsWfYbOhSfSLc6-uFhsKy6-aGmMTqD48';
-    const GID = '816143476';
+    const GID = '372638990';
     const CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${GID}`;
 
     let staffData = [];
@@ -373,7 +373,6 @@
     }
 
     function getColValue(row, colLetter, keywords) {
-      // 1. ตรวจจากชื่อหัวข้อที่ตรงกับ keyword
       if (keywords && keywords.length) {
         for (let k of keywords) {
           for (let key in row) {
@@ -388,7 +387,6 @@
           }
         }
       }
-      // 2. ดึงจากตำแหน่งคอลัมน์ letter (เช่น L=11, M=12...)
       if (colLetter && tableHeaders.length) {
         let idx = colLetterToIndex(colLetter);
         if (idx >= 0 && idx < tableHeaders.length) {
@@ -403,7 +401,6 @@
 
     // ================== LOGIC ประมวลผลคำแนะนำ ==================
     function evaluateVaccineStatus(d) {
-      // ข้อมูล Hep B ตามโครงสร้างใหม่ L ถึง T
       const intentL = getColValue(d, 'L', ['เจตจำนง', 'ผลสรุปไวรัสตับอักเสบบี']);
       const yearM = getColValue(d, 'M', ['ปีที่ตรวจ Hep', 'ปีที่ตรวจ Heb']);
       const hbsAgN = getColValue(d, 'N', ['HbsAg']);
@@ -415,7 +412,6 @@
       const dose2S = getColValue(d, 'S', ['Hep B เข็ม 2', 'เข็ม 2']);
       const dose3T = getColValue(d, 'T', ['Hep B เข็ม 3', 'เข็ม 3']);
 
-      // ตรวจสอบการฉีด
       let dosesGiven = 0;
       if (dose1R !== '-') dosesGiven++;
       if (dose2S !== '-') dosesGiven++;
@@ -437,8 +433,7 @@
         remainingText = 'เหลือ 3 เข็ม';
       }
 
-      // ================== ตรรกะการจัดสรรวัคซีน Hep B ==================
-      // กฎหลัก: ถ้ามีข้อมูลในคอลัมน์ Q -> "กลุ่มงานไม่ได้จัดสรรวัคซีน Hep B ให้อีก"
+      // ตรรกะการจัดสรรวัคซีน Hep B (อิงคอลัมน์ Q เป็นหลัก)
       let needAllocation = false;
       let allocationReason = '';
       let isSafe = false;
@@ -448,19 +443,15 @@
       const isHbsAbNeg = hbsAbO.toLowerCase().includes('neg');
 
       if (hasSummaryQ) {
-        // มีข้อมูลใน Q เช่น "มีภูมิคุ้มกันแล้ว", ปี พ.ศ., หรือดำเนินการรับเอง
         isSafe = true;
         allocationReason = `มีบันทึกในระบบ (${summaryQ})`;
       } else if (isHbsAbPos) {
-        // ผลแล็บตรวจพบภูมิแล้ว
         isSafe = true;
         allocationReason = 'ตรวจพบภูมิคุ้มกันแล้ว (HBsAb Positive)';
       } else if (dosesGiven === 3) {
-        // ฉีดครบ 3 เข็มแล้ว
         isSafe = true;
         allocationReason = 'ได้รับวัคซีนครบ 3 เข็มแล้ว';
       } else {
-        // ไม่มีข้อมูลใน Q และยังไม่มีภูมิ -> เข้าเกณฑ์ควรได้รับการจัดสรร
         needAllocation = true;
         if (isHbsAbNeg) {
           allocationReason = 'HBsAb Negative (ไม่มีภูมิคุ้มกัน)';
@@ -612,7 +603,7 @@
       dropdown.classList.add('hidden');
       searchInput.value = `${p['คำนำหน้า'] || ''}${p['ชื่อ'] || ''} ${p['นามสกุล'] || ''}`.trim();
 
-      // Card คำแนะนำด้านบน
+      // Card คำแนะนำ
       const recCard = document.getElementById('recommendationCard');
       const recIcon = document.getElementById('recommendationIcon');
       const recTitle = document.getElementById('recommendationTitle');
@@ -632,7 +623,7 @@
         recList.innerHTML = `<li>${ev.allocationReason}</li>`;
       }
 
-      // ข้อมูลทั่วไป
+      // Demographic
       document.getElementById('pAvatar').innerText = (p['ชื่อ'] || '').substring(0, 2);
       document.getElementById('pFullName').innerText = `${p['คำนำหน้า'] || ''}${p['ชื่อ'] || ''} ${p['นามสกุล'] || ''}`;
       document.getElementById('pStatusBadge').innerText = cleanVal(p['สถานะ']);
