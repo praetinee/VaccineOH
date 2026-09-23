@@ -584,25 +584,33 @@
     }
 
     function parseDateString(str) {
-      if (!str || str === '-') return null;
-      let s = str.trim();
-      if (s.includes('-')) {
-        const parts = s.split('-');
-        if (parts.length >= 3) {
-          let y = parseInt(parts[0], 10);
-          if (y > 2400) y -= 543;
-          const m = parseInt(parts[1], 10) - 1;
-          const d = parseInt(parts[2], 10);
-          return new Date(y, m, d);
-        }
-      }
-      if (s.includes('/')) {
-        const parts = s.split('/');
+      if (!str || str === '-' || str === 'undefined' || str === 'null') return null;
+      let s = String(str).trim();
+      
+      // ใช้ Regex ตัดเอาเฉพาะตัวเลขวันที่ (มองข้ามคำว่า "วันที่ " หรือตัวอักษรอื่นๆ)
+      const dateMatch = s.match(/(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,4})/);
+      if (!dateMatch) return null;
+      
+      let cleanDate = dateMatch[0]; // จะได้เฉพาะ 10/08/2569 หรือ 2569-08-10
+
+      if (cleanDate.includes('/')) {
+        const parts = cleanDate.split('/');
         if (parts.length >= 3) {
           const d = parseInt(parts[0], 10);
           const m = parseInt(parts[1], 10) - 1;
           let y = parseInt(parts[2], 10);
-          if (y > 2400) y -= 543;
+          if (y > 2400) y -= 543; // แปลง พ.ศ. เป็น ค.ศ.
+          return new Date(y, m, d);
+        }
+      }
+      if (cleanDate.includes('-')) {
+        const parts = cleanDate.split('-');
+        if (parts.length >= 3) {
+          let y = parseInt(parts[0], 10);
+          if (y === 1969) y = 2026; // แก้กรณีพิมพ์ปี 1969 ผิด
+          else if (y > 2400) y -= 543;
+          const m = parseInt(parts[1], 10) - 1;
+          const d = parseInt(parts[2], 10);
           return new Date(y, m, d);
         }
       }
@@ -731,14 +739,14 @@
       }
 
       // 2. ดึงข้อมูล สุกใส (U ถึง X)
-      const varDose1U = getColValue(d, 'U', ['สุกใส เข็ม 1', 'สุกใส1']);
-      const varDose2V = getColValue(d, 'V', ['สุกใส เข็ม 2', 'สุกใส2']);
-      const varSummaryW = getColValue(d, 'W', ['สรุปการได้รับฉีดวัคซีนสุกใส', 'สรุปสุกใส']);
+      const varDose1U = getColValue(d, 'U', ['สุกใส เข็ม 1', 'สุกใสเข็ม 1']);
+      const varDose2V = getColValue(d, 'V', ['สุกใส เข็ม 2', 'สุกใสเข็ม 2']);
+      const varSummaryW = getColValue(d, 'W', ['สรุปการได้รับฉีดวัคซีนสุกใส', 'สรุปสุกใส', 'สุกใส']);
       const varNoteX = getColValue(d, 'X', ['หมายเหตุ(สุกใส)', 'หมายเหตุ']);
 
       let varDosesGiven = 0;
-      if (varDose1U !== '-') varDosesGiven++;
-      if (varDose2V !== '-') varDosesGiven++;
+      if (varDose1U !== '-' && varDose1U !== '') varDosesGiven++;
+      if (varDose2V !== '-' && varDose2V !== '') varDosesGiven++;
 
       let varRemainingText = '';
       let varEstimateText = '-';
@@ -751,7 +759,7 @@
         varRemainingText = 'เหลือเข็มที่ 2';
         if (dateVar1) {
           const est2 = new Date(dateVar1.getTime());
-          est2.setDate(est2.getDate() + 28);
+          est2.setDate(est2.getDate() + 28); // ห่าง 4 สัปดาห์
           varEstimateText = `เข็มที่ 2 ประมาณ ${formatThaiMonthYear(est2)} (อย่างน้อย 4-8 สัปดาห์หลังเข็ม 1)`;
         } else {
           varEstimateText = 'เข็มที่ 2 ห่างจากเข็ม 1 อย่างน้อย 4-8 สัปดาห์';
@@ -761,10 +769,17 @@
         varEstimateText = 'รอการจัดสรรวัคซีนรอบใหม่';
       }
 
-      const hasVarSummaryW = varSummaryW !== '-';
-      const isVarSick = varNoteX.includes('เคยป่วย');
+      // ตรรกะใหม่: ครอบคลุมคอลัมน์ W ที่มี (เลขปี, เคยฉีด, ได้รับแล้ว, มีภูมิ)
+      const hasVarSummaryW = varSummaryW !== '-' && varSummaryW !== '';
+      const isVarSickOrImmune = varNoteX.includes('เคยป่วย') || 
+                                varSummaryW.includes('เคยป่วย') || 
+                                varSummaryW.includes('เคยฉีด') || 
+                                varSummaryW.includes('ได้รับแล้ว') || 
+                                varSummaryW.includes('ภูมิ');
+                                
       const isVarInProgress = (varDosesGiven === 1);
-      const isVarSafe = (hasVarSummaryW || isVarSick || varDosesGiven === 2) && !isVarInProgress;
+      // ถือว่าปลอดภัย (ไม่ต้องจัดสรร) ถ้า: มีระบุใดๆใน W หรือ มีบันทึกว่าเคยป่วย/เคยฉีด หรือ ฉีดครบ 2 เข็ม
+      const isVarSafe = (hasVarSummaryW || isVarSickOrImmune || varDosesGiven === 2) && !isVarInProgress;
       const needNewVarAllocation = !isVarSafe && !isVarInProgress;
 
       let varPolicyCategory = '';
@@ -778,8 +793,8 @@
       } else if (isVarSafe) {
         varPolicyCategory = 'SAFE';
         varPolicyTitle = 'ไม่ต้องจัดสรรวัคซีนสุกใสให้อีก';
-        if (varDosesGiven === 2) varPolicyReason = 'ได้รับวัคซีนครบ 2 เข็มแล้ว (U, V ครบถ้วน)';
-        else if (isVarSick) varPolicyReason = 'เคยป่วยเป็นโรคสุกใสแล้ว (มีภูมิธรรมชาติ)';
+        if (varDosesGiven === 2) varPolicyReason = 'ได้รับครบ 2 เข็มแล้ว';
+        else if (isVarSickOrImmune) varPolicyReason = 'มีภูมิคุ้มกัน / เคยป่วย / เคยได้รับมาแล้ว';
         else varPolicyReason = `มีบันทึกในระบบ (${varSummaryW})`;
       } else {
         varPolicyCategory = 'NEED_NEW';
