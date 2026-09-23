@@ -153,7 +153,7 @@
           </div>
         </div>
 
-        <!-- ==================== HEPATITIS B TRACKER (RESTRUCTURED) ==================== -->
+        <!-- ==================== HEPATITIS B TRACKER ==================== -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
           
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-3">
@@ -225,7 +225,7 @@
               </div>
             </div>
 
-            <!-- ส่วนที่ 3: ผลการตรวจทางแลป (W/V, Y, Z, AA, AB) -->
+            <!-- ส่วนที่ 3: ผลการตรวจทางแลป -->
             <div class="flex items-start gap-3 text-xs">
               <div class="w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 font-bold">3</div>
               <div class="flex-1 bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2.5">
@@ -282,7 +282,6 @@
                   </div>
                 </div>
 
-                <!-- กล่องสรุปสถานะเข็มที่เหลือและการคำนวณวันนัด -->
                 <div class="p-3 bg-white rounded-xl border border-emerald-100 space-y-1 text-slate-700">
                   <div><b>สถานะเข็มคงเหลือ:</b> <span id="tRemainingStatus" class="font-bold text-emerald-700">-</span></div>
                   <div><b>ช่วงเวลาที่ควรได้รับเข็มถัดไป (ประมาณการ):</b> <span id="tNextDoseEstimate" class="font-medium text-slate-800">-</span></div>
@@ -444,22 +443,19 @@
       }
     }
 
-    // Helper: แปลงสตริงวันที่ (เช่น 2568-06-23 หรือ 23/06/2568) เป็น Date Object
     function parseDateString(str) {
       if (!str || str === '-') return null;
       let s = str.trim();
-      // รูปแบบ YYYY-MM-DD
       if (s.includes('-')) {
         const parts = s.split('-');
         if (parts.length >= 3) {
           let y = parseInt(parts[0], 10);
-          if (y > 2400) y -= 543; // แปลง พ.ศ. เป็น ค.ศ.
+          if (y > 2400) y -= 543;
           const m = parseInt(parts[1], 10) - 1;
           const d = parseInt(parts[2], 10);
           return new Date(y, m, d);
         }
       }
-      // รูปแบบ DD/MM/YYYY
       if (s.includes('/')) {
         const parts = s.split('/');
         if (parts.length >= 3) {
@@ -480,7 +476,6 @@
       return `${months[dt.getMonth()]} ${thaiYear}`;
     }
 
-    // ฟังก์ชันคำนวณเข็ม 1, 2, 3 และประมาณการเข็มถัดไป
     function calculateHepBDoses(p) {
       const d1 = cleanVal(p['Hep B เข็ม 1']);
       const d2 = cleanVal(p['Hep B เข็ม 2']);
@@ -503,7 +498,6 @@
       } else if (dosesGiven === 2) {
         remainingText = 'เหลือเข็มที่ 3';
         if (date1) {
-          // เข็ม 3 ฉีดห่างจากเข็ม 1 ประมาณ 6 เดือน
           const est3 = new Date(date1.getTime());
           est3.setMonth(est3.getMonth() + 6);
           estimateText = `เข็มที่ 3 ประมาณ ${formatThaiMonthYear(est3)} (6 เดือนหลังเข็ม 1)`;
@@ -535,18 +529,19 @@
 
     // ================== LOGIC ประมวลผลคำแนะนำ ==================
     function evaluateVaccineStatus(d) {
-      // คอลัมน์ Y, Z, AA
       const hbsAg = String(d['HbsAg'] || '').toLowerCase();
       const hbsAb = String(d['HbsAb'] || '').toLowerCase();
       const hasAnyLab = cleanVal(d['HbsAg']) !== '-' || cleanVal(d['HbsAb']) !== '-' || cleanVal(d['HBcAB']) !== '-';
 
-      // คอลัมน์ AB: เจตจำนง / ผลสรุป
+      // คอลัมน์ AB
       const summaryAB = cleanVal(d['ผลสรุปไวรัสตับอักเสบบี']);
       const doseInfo = calculateHepBDoses(d);
 
-      // วันที่เจาะตรวจตามเกณฑ์ (W เป็นหลัก ถ้าไม่มีใช้ V)
-      const dateW = cleanVal(d['ระบุวันตรวจ Heb']);
-      const yearV = cleanVal(d['ปีที่ตรวจ Heb (จาก OH)']);
+      // คอลัมน์ V, W, X (รองรับทั้ง Hep และ Heb)
+      const yearV = cleanVal(d['ปีที่ตรวจ Hep (จาก OH)'] || d['ปีที่ตรวจ Heb (จาก OH)']);
+      const dateW = cleanVal(d['ระบุวันตรวจ Hep'] || d['ระบุวันตรวจ Heb']);
+      const historyX = cleanVal(d['ประวัติ Hep จากแหล่งอื่น'] || d['ประวัติ Heb จากแหล่งอื่น']);
+
       let unifiedLabDate = '-';
       if (dateW !== '-') unifiedLabDate = dateW;
       else if (yearV !== '-') unifiedLabDate = `ปี ${yearV}`;
@@ -603,7 +598,7 @@
         summaryAB,
         yearV,
         dateW,
-        historyX: cleanVal(d['ประวัติ Heb จากแหล่งอื่น']),
+        historyX,
         doseInfo,
         needHepB,
         needHepBReason,
@@ -756,7 +751,7 @@
       document.getElementById('pCitizenId').innerText = formatId(p['เลขประจำตัวประชาชน']);
       document.getElementById('pDob').innerText = cleanVal(p['วันเกิด']);
 
-      // ================== HEP B ACCORDION POPULATE (NEW STRUCTURE) ==================
+      // ================== HEP B ACCORDION POPULATE ==================
       document.getElementById('hepBOverviewSub').innerText = ev.isHepBImmune 
         ? 'มีภูมิคุ้มกันแล้ว (ไม่ต้องรับวัคซีน)' 
         : (ev.needHepB ? `ควรได้รับวัคซีน (${ev.needHepBReason})` : 'ไม่มีข้อมูลประวัติวัคซีน');
@@ -773,7 +768,7 @@
       document.getElementById('tDateW').innerText = ev.dateW;
       document.getElementById('tHistoryX').innerText = ev.historyX;
 
-      // 3. ผลการตรวจทางแลป (W/V, Y, Z, AA, AB)
+      // 3. ผลการตรวจทางแลป
       document.getElementById('tLabDateUnified').innerText = `วันที่เจาะตรวจ: ${ev.unifiedLabDate}`;
       const labGrid = document.getElementById('labGridContainer');
       const noLabNotice = document.getElementById('noLabNotice');
@@ -796,7 +791,6 @@
       document.getElementById('tRemainingStatus').innerText = ev.doseInfo.remainingText;
       document.getElementById('tNextDoseEstimate').innerText = ev.doseInfo.estimateText;
 
-      // รีเซ็ตการย่อ-ขยายให้พับไว้ก่อน
       document.getElementById('hepBHistoryTimeline').classList.add('hidden');
       document.getElementById('toggleIcon').classList.remove('rotate-180');
       document.getElementById('toggleText').innerText = 'ดูประวัติแบบละเอียด';
@@ -836,7 +830,7 @@
       document.getElementById('actionFilterCount').innerText = `พบ ${list.length} คน`;
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400">ไม่มีรายชื่อที่ต้องดำเนินการในเงื่อนไขนี้</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">ไม่มีรายชื่อที่ต้องดำเนินการในเงื่อนไขนี้</td></tr>`;
         return;
       }
 
