@@ -474,11 +474,13 @@
               <option value="">ทุกหน่วยงาน / แผนก</option>
             </select>
 
-            <select id="masterHepFilter" onchange="applyMasterFilters()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600">
-              <option value="">สถานะ Hep B ทั้งหมด</option>
-              <option value="IN_PROGRESS">อยู่ระหว่างรับวัคซีน Hep B</option>
-              <option value="NEED_NEW">รอจัดสรร Hep B ใหม่</option>
-              <option value="SAFE">ไม่ต้องจัดสรร Hep B (มีภูมิ/ครบ)</option>
+            <select id="masterVaccineTypeFilter" onchange="applyMasterFilters()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600">
+              <option value="">ชนิดวัคซีนทั้งหมด</option>
+              <option value="HEPB">วัคซีน Hep B</option>
+              <option value="VAR">วัคซีนอีสุกอีใส</option>
+              <option value="FLU">วัคซีนไข้หวัดใหญ่</option>
+              <option value="MMR">วัคซีนรวมป้องกันโรคหัด-คางทูม-หัดเยอรมัน</option>
+              <option value="TDAP">วัคซีนรวมป้องกันโรคบาดทะยัก-คอตีบ-ไอกรนชนิดไร้เซลล์(Tdap)</option>
             </select>
 
             <select id="masterVarFilter" onchange="applyMasterFilters()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600">
@@ -1294,7 +1296,7 @@
     function applyMasterFilters() {
       const q = (document.getElementById('masterSearchInput')?.value || '').trim().toLowerCase();
       const dept = document.getElementById('masterDeptFilter')?.value || '';
-      const hepFilter = document.getElementById('masterHepFilter')?.value || '';
+      const vTypeFilter = document.getElementById('masterVaccineTypeFilter')?.value || '';
       const varFilter = document.getElementById('masterVarFilter')?.value || '';
 
       masterFilteredList = processedList.filter(p => {
@@ -1305,10 +1307,15 @@
 
         const matchQ = !q || fullName.includes(q) || hn.includes(q) || pos.includes(q);
         const matchDept = !dept || d['หน่วยงาน'] === dept;
-        const matchHep = !hepFilter || p.eval.policyCategory === hepFilter;
+        let matchVType = true;
+        if (vTypeFilter === 'HEPB') matchVType = p.eval.isInProgress || p.eval.needNewAllocation;
+        else if (vTypeFilter === 'VAR') matchVType = p.eval.isVarInProgress || p.eval.needNewVarAllocation;
+        else if (vTypeFilter === 'FLU') matchVType = p.eval.fluY !== '-';
+        else if (vTypeFilter === 'MMR') matchVType = p.eval.mmrZ !== '-';
+        else if (vTypeFilter === 'TDAP') matchVType = p.eval.tdapAA !== '-';
         const matchVar = !varFilter || p.eval.varPolicyCategory === varFilter;
 
-        return matchQ && matchDept && matchHep && matchVar;
+        return matchQ && matchDept && matchVType && matchVar;
       });
 
       renderMasterTable(masterFilteredList);
@@ -1317,7 +1324,7 @@
     function resetMasterFilters() {
       if (document.getElementById('masterSearchInput')) document.getElementById('masterSearchInput').value = '';
       if (document.getElementById('masterDeptFilter')) document.getElementById('masterDeptFilter').value = '';
-      if (document.getElementById('masterHepFilter')) document.getElementById('masterHepFilter').value = '';
+      if (document.getElementById('masterVaccineTypeFilter')) document.getElementById('masterVaccineTypeFilter').value = '';
       if (document.getElementById('masterVarFilter')) document.getElementById('masterVarFilter').value = '';
       applyMasterFilters();
     }
