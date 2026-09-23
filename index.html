@@ -48,7 +48,7 @@
   <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
 
     <!-- KPI Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
         <div class="p-2.5 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="users" class="w-5 h-5"></i></div>
         <div>
@@ -57,29 +57,22 @@
         </div>
       </div>
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+        <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+        <div>
+          <div class="text-[11px] text-slate-500 font-medium">ไม่ต้องจัดสรร Hep B (มีภูมิ/ได้รับแล้ว)</div>
+          <div id="statSafeHepB" class="text-xl font-bold text-emerald-600">-</div>
+        </div>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
         <div class="p-2.5 bg-amber-50 text-amber-600 rounded-lg"><i data-lucide="alert-circle" class="w-5 h-5"></i></div>
         <div>
-          <div class="text-[11px] text-slate-500 font-medium">ควรได้รับวัคซีน Hep B</div>
+          <div class="text-[11px] text-slate-500 font-medium">ควรได้รับการจัดสรร Hep B</div>
           <div id="statNeedHepB" class="text-xl font-bold text-amber-600">-</div>
-        </div>
-      </div>
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-        <div class="p-2.5 bg-rose-50 text-rose-600 rounded-lg"><i data-lucide="shield-alert" class="w-5 h-5"></i></div>
-        <div>
-          <div class="text-[11px] text-slate-500 font-medium">ควรได้รับวัคซีนสุกใส</div>
-          <div id="statNeedVaricella" class="text-xl font-bold text-rose-600">-</div>
-        </div>
-      </div>
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-        <div class="p-2.5 bg-purple-50 text-purple-600 rounded-lg"><i data-lucide="calendar" class="w-5 h-5"></i></div>
-        <div>
-          <div class="text-[11px] text-slate-500 font-medium">มีแผนรับปี 2568-2569</div>
-          <div id="statHasPlan" class="text-xl font-bold text-purple-600">-</div>
         </div>
       </div>
     </div>
 
-    <!-- Tab Navigation -->
+    <!-- Mode Tab Navigation -->
     <div class="flex border-b border-slate-200 gap-4">
       <button onclick="switchTab('search')" id="tabBtnSearch" class="pb-3 text-sm font-semibold text-emerald-700 border-b-2 border-emerald-600 flex items-center gap-1.5">
         <i data-lucide="search" class="w-4 h-4"></i>
@@ -87,8 +80,8 @@
       </button>
       <button onclick="switchTab('action')" id="tabBtnAction" class="pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
         <i data-lucide="list-checks" class="w-4 h-4"></i>
-        <span>รายชื่อผู้ควรได้รับวัคซีน / ติดตาม</span>
-        <span id="actionCountBadge" class="bg-rose-100 text-rose-700 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+        <span>รายชื่อผู้ควรได้รับการจัดสรรวัคซีน Hep B</span>
+        <span id="actionCountBadge" class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
       </button>
     </div>
 
@@ -117,16 +110,16 @@
           <i data-lucide="user-search" class="w-7 h-7"></i>
         </div>
         <h3 class="text-sm font-semibold text-slate-700">ค้นหารายชื่อเจ้าหน้าที่</h3>
-        <p class="text-xs text-slate-400 mt-1">พิมพ์คำค้นหาด้านบน เพื่อดูสรุปคำแนะนำและประวัติการรับวัคซีนแบบละเอียด</p>
+        <p class="text-xs text-slate-400 mt-1">พิมพ์คำค้นหาด้านบน เพื่อดูสรุปคำแนะนำและประวัติการรับวัคซีน Hep B แบบละเอียด</p>
       </div>
 
       <div id="profileContainer" class="hidden space-y-5">
         
-        <!-- Recommendation Box -->
+        <!-- Action Summary Card -->
         <div id="recommendationCard" class="p-5 rounded-2xl border flex items-start gap-4">
           <div id="recommendationIcon" class="p-3 rounded-xl bg-white shadow-sm shrink-0"></div>
           <div>
-            <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">ผลการประมวลผลคำแนะนำ (OccMed Action)</div>
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">ผลการประมวลผลคำแนะนำ (OccMed / IC Policy)</div>
             <h3 id="recommendationTitle" class="text-base font-bold mt-0.5">-</h3>
             <ul id="recommendationList" class="text-xs mt-2 space-y-1 text-slate-700 list-disc list-inside"></ul>
           </div>
@@ -153,7 +146,7 @@
           </div>
         </div>
 
-        <!-- ==================== HEPATITIS B TRACKER ==================== -->
+        <!-- ==================== HEPATITIS B TRACKER (STRUCTURED L -> T) ==================== -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
           
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-3">
@@ -176,77 +169,61 @@
           <!-- Quick Summary Card -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span class="text-slate-400 block mb-0.5">ระดับภูมิคุ้มกัน (HBsAb)</span>
+              <span class="text-slate-400 block mb-0.5">ระดับภูมิคุ้มกัน (HBsAb - คอลัมน์ O)</span>
               <span id="quickHbsAb" class="font-bold text-slate-800 text-sm">-</span>
             </div>
             <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span class="text-slate-400 block mb-0.5">ประวัติการฉีด</span>
+              <span class="text-slate-400 block mb-0.5">ประวัติการฉีด (เข็ม 1-3)</span>
               <span id="quickDoseProgress" class="font-bold text-slate-800 text-sm">-</span>
             </div>
             <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
-              <span class="text-emerald-600 block mb-0.5 font-medium">เข็มคงเหลือที่ต้องรับ</span>
-              <span id="quickRemainingDoses" class="font-bold text-emerald-800 text-sm">-</span>
+              <span class="text-emerald-600 block mb-0.5 font-medium">การจัดสรรวัคซีน Hep B</span>
+              <span id="quickAllocationStatus" class="font-bold text-emerald-800 text-sm">-</span>
             </div>
           </div>
 
           <!-- Collapsible Timeline Section -->
           <div id="hepBHistoryTimeline" class="hidden pt-3 border-t border-slate-100 space-y-4">
             
-            <!-- ส่วนที่ 1: เจตจำนงจากการสำรวจปี 2569 (คอลัมน์ AB) -->
+            <!-- 1. เจตจำนงของผู้รับการสำรวจ (คอลัมน์ L) -->
             <div class="flex items-start gap-3 text-xs">
               <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 font-bold">1</div>
               <div class="flex-1 bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5">
-                <div class="font-bold text-slate-700">เจตจำนงจากการสำรวจปี 2569 (คอลัมน์ AB)</div>
-                <div class="p-2 bg-white rounded border border-slate-200 font-medium text-slate-800" id="tSurveyIntent">
+                <div class="font-bold text-slate-700">เจตจำนงของผู้รับการสำรวจ (คอลัมน์ L)</div>
+                <div class="p-2.5 bg-white rounded-lg border border-slate-200 text-slate-800 font-medium" id="tSurveyIntent">
                   -
                 </div>
               </div>
             </div>
 
-            <!-- ส่วนที่ 2: ประวัติตามปี (คอลัมน์ V, W, X) -->
+            <!-- 2. การได้รับการเจาะเลือดตรวจภูมิ (คอลัมน์ M) -->
             <div class="flex items-start gap-3 text-xs">
               <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 font-bold">2</div>
-              <div class="flex-1 bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
-                <div class="font-bold text-slate-700">ประวัติตามปี (คอลัมน์ V, W, X)</div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <div class="p-2 bg-white rounded border">
-                    <span class="text-[10px] text-slate-400 block">ปีที่เจาะเลือดตรวจภูมิ (คอลัมน์ V)</span>
-                    <span id="tYearV" class="font-semibold text-slate-800 block mt-0.5">-</span>
-                  </div>
-                  <div class="p-2 bg-white rounded border">
-                    <span class="text-[10px] text-slate-400 block">วันที่ตรวจแน่นอน/ช่วงวันที่ (คอลัมน์ W)</span>
-                    <span id="tDateW" class="font-semibold text-slate-800 block mt-0.5">-</span>
-                  </div>
-                  <div class="p-2 bg-white rounded border">
-                    <span class="text-[10px] text-slate-400 block">ประวัติการค้นหา/ซักประวัติ (คอลัมน์ X)</span>
-                    <span id="tHistoryX" class="font-semibold text-slate-800 block mt-0.5">-</span>
-                  </div>
+              <div class="flex-1 bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+                <div class="font-bold text-slate-700">การได้รับการเจาะเลือดตรวจภูมิ (คอลัมน์ M)</div>
+                <div class="p-2.5 bg-white rounded-lg border border-slate-200 text-slate-800">
+                  ปีที่เจาะเลือดตรวจภูมิ: <b id="tYearM" class="text-indigo-700 text-sm">-</b>
                 </div>
               </div>
             </div>
 
-            <!-- ส่วนที่ 3: ผลการตรวจทางแลป -->
+            <!-- 3. ผลการตรวจแล็บ (N, O, P) & ผลสรุป (Q) -->
             <div class="flex items-start gap-3 text-xs">
               <div class="w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 font-bold">3</div>
-              <div class="flex-1 bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2.5">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                  <span class="font-bold text-slate-700">ผลการตรวจทางห้องปฏิบัติการ (Lab Results)</span>
-                  <span id="tLabDateUnified" class="text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200 text-[11px] font-medium w-fit">
-                    วันที่เจาะตรวจ: -
-                  </span>
-                </div>
+              <div class="flex-1 bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
+                <div class="font-bold text-slate-700">ผลการตรวจแล็บ & สรุปการตรวจภูมิ (คอลัมน์ N, O, P, Q)</div>
                 
                 <div id="labGridContainer" class="grid grid-cols-3 gap-2 text-center">
-                  <div class="p-2 bg-white rounded border">
-                    <span class="text-[10px] text-slate-400 block">HBsAg (เชื้อ - คอลัมน์ Y)</span>
+                  <div class="p-2.5 bg-white rounded-lg border">
+                    <span class="text-[10px] text-slate-400 block">HBsAg (เชื้อ - คอลัมน์ N)</span>
                     <span id="tHbsAg" class="font-semibold block mt-0.5">-</span>
                   </div>
-                  <div class="p-2 bg-white rounded border">
-                    <span class="text-[10px] text-slate-400 block">HBsAb (ภูมิ - คอลัมน์ Z)</span>
+                  <div class="p-2.5 bg-white rounded-lg border">
+                    <span class="text-[10px] text-slate-400 block">HBsAb (ภูมิ - คอลัมน์ O)</span>
                     <span id="tHbsAb" class="font-semibold block mt-0.5">-</span>
                   </div>
-                  <div class="p-2 bg-white rounded border">
-                    <span class="text-[10px] text-slate-400 block">HBcAb (ติดเชื้อเดิม - คอลัมน์ AA)</span>
+                  <div class="p-2.5 bg-white rounded-lg border">
+                    <span class="text-[10px] text-slate-400 block">HBcAb (ติดเชื้อเดิม - คอลัมน์ P)</span>
                     <span id="tHbcAb" class="font-semibold block mt-0.5">-</span>
                   </div>
                 </div>
@@ -255,100 +232,46 @@
                   ไม่มีบันทึกผลแล็บ HBsAg / HBsAb / HBcAb ในระบบ
                 </div>
 
-                <div class="pt-1.5 border-t border-slate-200">
-                  <span class="text-slate-500">สรุปผลการตรวจภูมิ Hep B (คอลัมน์ AB):</span>
-                  <span id="tSummaryFromAB" class="font-bold text-emerald-800 ml-1">-</span>
+                <!-- สรุปผลจากคอลัมน์ Q -->
+                <div class="p-3 bg-white rounded-lg border border-slate-200 space-y-1">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="font-semibold text-slate-600">สรุปการได้รับฉีดวัคซีน Hep B (คอลัมน์ Q):</span>
+                    <span id="tSummaryQ" class="font-bold text-slate-800 text-right">-</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400" id="tLogicExplanation">
+                    * ตรรกะ: หากมีข้อมูลในคอลัมน์นี้ กลุ่มงานจะไม่จัดสรรวัคซีน Hep B ให้เพิ่มอีก
+                  </p>
                 </div>
               </div>
             </div>
 
-            <!-- ส่วนที่ 4: การได้รับวัคซีนทั้งสามเข็ม & การคำนวณเข็มที่เหลือ -->
+            <!-- 4. ประวัติการรับวัคซีน Hep B เข็ม 1, 2, 3 (คอลัมน์ R, S, T) -->
             <div class="flex items-start gap-3 text-xs">
               <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-bold">4</div>
               <div class="flex-1 bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2.5">
-                <div class="font-bold text-slate-700">ประวัติการได้รับวัคซีนทั้ง 3 เข็ม & การคาดการณ์กำหนดฉีด</div>
+                <div class="font-bold text-slate-700">ประวัติการได้รับวัคซีน Hep B เข็ม 1 - 3 (คอลัมน์ R, S, T)</div>
                 <div class="grid grid-cols-3 gap-2 text-center">
-                  <div class="p-2 bg-white rounded-lg border">
-                    <span class="text-slate-400 block text-[10px]">เข็มที่ 1</span>
+                  <div class="p-2.5 bg-white rounded-lg border">
+                    <span class="text-slate-400 block text-[10px]">เข็มที่ 1 (คอลัมน์ R)</span>
                     <span id="tDose1" class="font-semibold text-slate-800 block mt-0.5">-</span>
                   </div>
-                  <div class="p-2 bg-white rounded-lg border">
-                    <span class="text-slate-400 block text-[10px]">เข็มที่ 2</span>
+                  <div class="p-2.5 bg-white rounded-lg border">
+                    <span class="text-slate-400 block text-[10px]">เข็มที่ 2 (คอลัมน์ S)</span>
                     <span id="tDose2" class="font-semibold text-slate-800 block mt-0.5">-</span>
                   </div>
-                  <div class="p-2 bg-white rounded-lg border">
-                    <span class="text-slate-400 block text-[10px]">เข็มที่ 3</span>
+                  <div class="p-2.5 bg-white rounded-lg border">
+                    <span class="text-slate-400 block text-[10px]">เข็มที่ 3 (คอลัมน์ T)</span>
                     <span id="tDose3" class="font-semibold text-slate-800 block mt-0.5">-</span>
                   </div>
                 </div>
 
-                <div class="p-3 bg-white rounded-xl border border-emerald-100 space-y-1 text-slate-700">
-                  <div><b>สถานะเข็มคงเหลือ:</b> <span id="tRemainingStatus" class="font-bold text-emerald-700">-</span></div>
-                  <div><b>ช่วงเวลาที่ควรได้รับเข็มถัดไป (ประมาณการ):</b> <span id="tNextDoseEstimate" class="font-medium text-slate-800">-</span></div>
+                <div class="p-2.5 bg-white rounded-lg border border-emerald-100 flex items-center justify-between text-slate-700">
+                  <span>สถานะการฉีด: <b id="tDoseSummaryText" class="text-emerald-700">-</b></span>
+                  <span id="tRemainingDoseCount" class="text-[11px] text-slate-500 font-medium">-</span>
                 </div>
               </div>
             </div>
 
-          </div>
-        </div>
-
-        <!-- Section 2: Varicella -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-          <div class="flex items-center justify-between border-b pb-2">
-            <div class="flex items-center gap-2">
-              <i data-lucide="shield" class="w-4 h-4 text-blue-600"></i>
-              <h3 class="font-bold text-sm text-slate-800">วัคซีนสุกใส (Varicella)</h3>
-            </div>
-            <span id="pVaricellaNote" class="text-xs px-2 py-0.5 rounded border">-</span>
-          </div>
-          <div class="grid grid-cols-3 gap-2 text-center text-xs">
-            <div class="p-2.5 bg-slate-50 rounded-lg border text-left col-span-1">
-              <span class="text-slate-400 block mb-0.5">ผลสรุปวัคซีนสุกใส</span>
-              <span id="pVaricellaSummary" class="font-medium text-slate-800">-</span>
-            </div>
-            <div class="p-2.5 bg-slate-50 rounded-lg border">
-              <span class="text-slate-400 block mb-0.5">เข็ม 1</span>
-              <span id="pVar1" class="font-semibold text-slate-800">-</span>
-            </div>
-            <div class="p-2.5 bg-slate-50 rounded-lg border">
-              <span class="text-slate-400 block mb-0.5">เข็ม 2</span>
-              <span id="pVar2" class="font-semibold text-slate-800">-</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Section 3: Annual Record -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-          <div class="flex items-center gap-2 border-b pb-2">
-            <i data-lucide="calendar-range" class="w-4 h-4 text-purple-600"></i>
-            <h3 class="font-bold text-sm text-slate-800">ประวัติและแผนการรับวัคซีน รพ. รายปี (2565 - 2569)</h3>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-5 gap-2 text-xs">
-            <div class="p-2 bg-slate-50 rounded border">
-              <b class="text-slate-700 block">ปี 2565</b>
-              <span id="pY2565" class="block truncate text-[11px]">-</span>
-              <span id="pDate2565" class="text-[10px] text-slate-400 block">-</span>
-            </div>
-            <div class="p-2 bg-slate-50 rounded border">
-              <b class="text-slate-700 block">ปี 2566</b>
-              <span id="pY2566" class="block truncate text-[11px]">-</span>
-              <span id="pDate2566" class="text-[10px] text-slate-400 block">-</span>
-            </div>
-            <div class="p-2 bg-slate-50 rounded border">
-              <b class="text-slate-700 block">ปี 2567</b>
-              <span id="pY2567" class="block truncate text-[11px]">-</span>
-              <span id="pDate2567" class="text-[10px] text-slate-400 block">-</span>
-            </div>
-            <div class="p-2 bg-slate-50 rounded border">
-              <b class="text-slate-700 block">ปี 2568</b>
-              <span id="pY2568" class="block truncate text-[11px]">-</span>
-              <span id="pDate2568" class="text-[10px] text-slate-400 block">-</span>
-            </div>
-            <div class="p-2 bg-slate-50 rounded border">
-              <b class="text-slate-700 block">ปี 2569</b>
-              <span id="pY2569" class="block truncate text-[11px]">-</span>
-              <span id="pDate2569" class="text-[10px] text-slate-400 block">-</span>
-            </div>
           </div>
         </div>
 
@@ -358,14 +281,9 @@
     <!-- ==================== TAB 2: ACTION LIST ==================== -->
     <div id="tabActionSection" class="hidden space-y-4">
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3 items-center justify-between">
-        <div class="flex items-center gap-2">
-          <select id="actionFilterSelect" onchange="renderActionTable()" class="text-xs border border-slate-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 font-medium">
-            <option value="ALL_ACTION">ทั้งหมดที่ควรดำเนินการ (Hep B / สุกใส / แผนประจำปี)</option>
-            <option value="NEED_HEPB">เฉพาะผู้ที่ควรได้รับวัคซีน Hepatitis B</option>
-            <option value="NEED_VARICELLA">เฉพาะผู้ที่ควรได้รับวัคซีนสุกใส</option>
-            <option value="HAS_PLAN">เฉพาะผู้ที่มีแผนรับปี 2568 - 2569</option>
-          </select>
-          <span id="actionFilterCount" class="text-xs text-slate-500 font-medium"></span>
+        <div class="text-xs font-semibold text-slate-700">
+          รายชื่อเจ้าหน้าที่ที่ <span class="text-amber-600">ควรได้รับการจัดสรรวัคซีน Hep B</span> 
+          <span id="actionFilterCount" class="text-slate-400 font-normal ml-1"></span>
         </div>
         <button onclick="exportActionCSV()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
           <i data-lucide="download" class="w-3.5 h-3.5"></i>
@@ -382,10 +300,10 @@
                 <th class="p-3">ชื่อ - นามสกุล</th>
                 <th class="p-3">HN</th>
                 <th class="p-3">ตำแหน่ง / หน่วยงาน</th>
-                <th class="p-3">วันที่ตรวจ Hep B</th>
-                <th class="p-3">สถานะ Hep B</th>
-                <th class="p-3">สถานะสุกใส</th>
-                <th class="p-3">คำแนะนำ / การดำเนินการ</th>
+                <th class="p-3">เจตจำนง (L)</th>
+                <th class="p-3">HBsAb (O)</th>
+                <th class="p-3">ประวัติฉีด (R-T)</th>
+                <th class="p-3">เหตุผลที่ควรจัดสรร</th>
                 <th class="p-3 text-center">ดูข้อมูล</th>
               </tr>
             </thead>
@@ -404,6 +322,7 @@
 
     let staffData = [];
     let processedList = [];
+    let tableHeaders = [];
 
     function formatId(id) {
       if (!id) return '-';
@@ -443,172 +362,137 @@
       }
     }
 
-    function parseDateString(str) {
-      if (!str || str === '-') return null;
-      let s = str.trim();
-      if (s.includes('-')) {
-        const parts = s.split('-');
-        if (parts.length >= 3) {
-          let y = parseInt(parts[0], 10);
-          if (y > 2400) y -= 543;
-          const m = parseInt(parts[1], 10) - 1;
-          const d = parseInt(parts[2], 10);
-          return new Date(y, m, d);
-        }
+    // Helper: ดึงข้อมูลจากคอลัมน์โดยดูทั้งชื่อหัวข้อ และตำแหน่งตัวอักษรคอลัมน์ (L, M, N...)
+    function colLetterToIndex(letter) {
+      let l = letter.toUpperCase();
+      let n = 0;
+      for (let i = 0; i < l.length; i++) {
+        n = n * 26 + l.charCodeAt(i) - 64;
       }
-      if (s.includes('/')) {
-        const parts = s.split('/');
-        if (parts.length >= 3) {
-          const d = parseInt(parts[0], 10);
-          const m = parseInt(parts[1], 10) - 1;
-          let y = parseInt(parts[2], 10);
-          if (y > 2400) y -= 543;
-          return new Date(y, m, d);
-        }
-      }
-      return null;
+      return n - 1;
     }
 
-    function formatThaiMonthYear(dt) {
-      if (!dt || isNaN(dt.getTime())) return '';
-      const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-      const thaiYear = dt.getFullYear() + 543;
-      return `${months[dt.getMonth()]} ${thaiYear}`;
-    }
-
-    function calculateHepBDoses(p) {
-      const d1 = cleanVal(p['Hep B เข็ม 1']);
-      const d2 = cleanVal(p['Hep B เข็ม 2']);
-      const d3 = cleanVal(p['Hep B เข็ม 3']);
-
-      let dosesGiven = 0;
-      if (d1 !== '-') dosesGiven++;
-      if (d2 !== '-') dosesGiven++;
-      if (d3 !== '-') dosesGiven++;
-
-      let remainingText = '';
-      let estimateText = '-';
-
-      const date1 = parseDateString(d1);
-      const date2 = parseDateString(d2);
-
-      if (dosesGiven === 3) {
-        remainingText = 'ฉีดครบ 3 เข็มแล้ว';
-        estimateText = 'ได้รับวัคซีนครบตามโปรแกรมแล้ว';
-      } else if (dosesGiven === 2) {
-        remainingText = 'เหลือเข็มที่ 3';
-        if (date1) {
-          const est3 = new Date(date1.getTime());
-          est3.setMonth(est3.getMonth() + 6);
-          estimateText = `เข็มที่ 3 ประมาณ ${formatThaiMonthYear(est3)} (6 เดือนหลังเข็ม 1)`;
-        } else if (date2) {
-          const est3 = new Date(date2.getTime());
-          est3.setMonth(est3.getMonth() + 5);
-          estimateText = `เข็มที่ 3 ประมาณ ${formatThaiMonthYear(est3)}`;
-        } else {
-          estimateText = 'เข็มที่ 3 ประมาณ 6 เดือนหลังจากเข็ม 1';
+    function getColValue(row, colLetter, keywords) {
+      // 1. ตรวจจากชื่อหัวข้อที่ตรงกับ keyword
+      if (keywords && keywords.length) {
+        for (let k of keywords) {
+          for (let key in row) {
+            if (key.trim().toLowerCase() === k.trim().toLowerCase()) {
+              return cleanVal(row[key]);
+            }
+          }
+          for (let key in row) {
+            if (key.trim().toLowerCase().includes(k.trim().toLowerCase())) {
+              return cleanVal(row[key]);
+            }
+          }
         }
-      } else if (dosesGiven === 1) {
-        remainingText = 'เหลืออีก 2 เข็ม (เข็ม 2 และ 3)';
-        if (date1) {
-          const est2 = new Date(date1.getTime());
-          est2.setMonth(est2.getMonth() + 1);
-          const est3 = new Date(date1.getTime());
-          est3.setMonth(est3.getMonth() + 6);
-          estimateText = `เข็มที่ 2 ประมาณ ${formatThaiMonthYear(est2)} และ เข็มที่ 3 ประมาณ ${formatThaiMonthYear(est3)}`;
-        } else {
-          estimateText = 'เข็มที่ 2 (1 เดือนหลังเข็ม 1) และ เข็มที่ 3 (6 เดือนหลังเข็ม 1)';
-        }
-      } else {
-        remainingText = 'ยังไม่ได้ฉีด (เหลือ 3 เข็ม)';
-        estimateText = 'ควรเริ่มฉีดเข็มที่ 1 ทันทีที่พร้อม (เข็ม 2 ห่าง 1 เดือน, เข็ม 3 ห่าง 6 เดือน)';
       }
-
-      return { dosesGiven, remainingText, estimateText, d1, d2, d3 };
+      // 2. ดึงจากตำแหน่งคอลัมน์ letter (เช่น L=11, M=12...)
+      if (colLetter && tableHeaders.length) {
+        let idx = colLetterToIndex(colLetter);
+        if (idx >= 0 && idx < tableHeaders.length) {
+          let header = tableHeaders[idx];
+          if (header && row[header] !== undefined) {
+            return cleanVal(row[header]);
+          }
+        }
+      }
+      return '-';
     }
 
     // ================== LOGIC ประมวลผลคำแนะนำ ==================
     function evaluateVaccineStatus(d) {
-      const hbsAg = String(d['HbsAg'] || '').toLowerCase();
-      const hbsAb = String(d['HbsAb'] || '').toLowerCase();
-      const hasAnyLab = cleanVal(d['HbsAg']) !== '-' || cleanVal(d['HbsAb']) !== '-' || cleanVal(d['HBcAB']) !== '-';
+      // ข้อมูล Hep B ตามโครงสร้างใหม่ L ถึง T
+      const intentL = getColValue(d, 'L', ['เจตจำนง', 'ผลสรุปไวรัสตับอักเสบบี']);
+      const yearM = getColValue(d, 'M', ['ปีที่ตรวจ Hep', 'ปีที่ตรวจ Heb']);
+      const hbsAgN = getColValue(d, 'N', ['HbsAg']);
+      const hbsAbO = getColValue(d, 'O', ['HbsAb']);
+      const hbcAbP = getColValue(d, 'P', ['HBcAB']);
+      const summaryQ = getColValue(d, 'Q', ['สรุปการได้รับฉีดวัคซีน Hep B']);
+      
+      const dose1R = getColValue(d, 'R', ['Hep B เข็ม 1', 'เข็ม 1']);
+      const dose2S = getColValue(d, 'S', ['Hep B เข็ม 2', 'เข็ม 2']);
+      const dose3T = getColValue(d, 'T', ['Hep B เข็ม 3', 'เข็ม 3']);
 
-      // คอลัมน์ AB
-      const summaryAB = cleanVal(d['ผลสรุปไวรัสตับอักเสบบี']);
-      const doseInfo = calculateHepBDoses(d);
+      // ตรวจสอบการฉีด
+      let dosesGiven = 0;
+      if (dose1R !== '-') dosesGiven++;
+      if (dose2S !== '-') dosesGiven++;
+      if (dose3T !== '-') dosesGiven++;
 
-      // คอลัมน์ V, W, X (รองรับทั้ง Hep และ Heb)
-      const yearV = cleanVal(d['ปีที่ตรวจ Hep (จาก OH)'] || d['ปีที่ตรวจ Heb (จาก OH)']);
-      const dateW = cleanVal(d['ระบุวันตรวจ Hep'] || d['ระบุวันตรวจ Heb']);
-      const historyX = cleanVal(d['ประวัติ Hep จากแหล่งอื่น'] || d['ประวัติ Heb จากแหล่งอื่น']);
-
-      let unifiedLabDate = '-';
-      if (dateW !== '-') unifiedLabDate = dateW;
-      else if (yearV !== '-') unifiedLabDate = `ปี ${yearV}`;
-      else unifiedLabDate = 'ไม่ระบุวันที่ตรวจ';
-
-      const varicellaSum = String(d['สรุปการได้รับฉีดวัคซีนสุกใส (ระบุปีที่ฉีดเข็ม 1?) - ข้อมูลจาก Occmed/Plan/IC'] || '');
-      const note = String(d['หมายเหตุ'] || '');
-      const y2568 = String(d['2568'] || '');
-      const y2569 = String(d['2569'] || '');
-
-      let needHepB = false;
-      let needHepBReason = '';
-      let isHepBImmune = false;
-
-      // เกณฑ์ประเมิน Hep B
-      if (hbsAb.includes('pos') || summaryAB.includes('มีภูมิคุ้มกัน')) {
-        isHepBImmune = true;
-      } else if (hbsAb.includes('neg') && !hbsAg.includes('pos')) {
-        needHepB = true;
-        needHepBReason = 'HBsAb Negative (ไม่มีภูมิคุ้มกัน)';
-      } else if (summaryAB.includes('ต้องการเจาะเลือด') || summaryAB.includes('ไม่มีภูมิคุ้มกัน') || summaryAB.includes('ขอรับวัคซีน')) {
-        needHepB = true;
-        needHepBReason = summaryAB;
-      } else if (doseInfo.dosesGiven > 0 && doseInfo.dosesGiven < 3) {
-        needHepB = true;
-        needHepBReason = `ฉีดยังไม่ครบ (${doseInfo.remainingText})`;
+      let doseSummaryText = '';
+      let remainingText = '';
+      if (dosesGiven === 3) {
+        doseSummaryText = 'ฉีดครบ 3 เข็มแล้ว';
+        remainingText = 'ครบถ้วน (เหลือ 0 เข็ม)';
+      } else if (dosesGiven === 2) {
+        doseSummaryText = 'ฉีดแล้ว 2 เข็ม';
+        remainingText = 'เหลือเข็มที่ 3';
+      } else if (dosesGiven === 1) {
+        doseSummaryText = 'ฉีดแล้ว 1 เข็ม';
+        remainingText = 'เหลืออีก 2 เข็ม (เข็ม 2 และ 3)';
+      } else {
+        doseSummaryText = 'ยังไม่เคยมีบันทึกฉีด';
+        remainingText = 'เหลือ 3 เข็ม';
       }
 
-      // เกณฑ์ สุกใส
-      let needVaricella = false;
-      let needVaricellaReason = '';
-      let isVaricellaImmune = false;
+      // ================== ตรรกะการจัดสรรวัคซีน Hep B ==================
+      // กฎหลัก: ถ้ามีข้อมูลในคอลัมน์ Q -> "กลุ่มงานไม่ได้จัดสรรวัคซีน Hep B ให้อีก"
+      let needAllocation = false;
+      let allocationReason = '';
+      let isSafe = false;
 
-      if (note.includes('เคยป่วย') || varicellaSum.includes('มีภูมิคุ้มกัน') || varicellaSum.includes('ได้รับแล้ว')) {
-        isVaricellaImmune = true;
-      } else if (varicellaSum.includes('2568') || varicellaSum.includes('2569') || (d['สุกใส เข็ม 1'] && !d['สุกใส เข็ม 2'])) {
-        needVaricella = true;
-        needVaricellaReason = 'มีแผนฉีด/ยังฉีดไม่ครบ 2 เข็ม';
+      const hasSummaryQ = summaryQ !== '-';
+      const isHbsAbPos = hbsAbO.toLowerCase().includes('pos');
+      const isHbsAbNeg = hbsAbO.toLowerCase().includes('neg');
+
+      if (hasSummaryQ) {
+        // มีข้อมูลใน Q เช่น "มีภูมิคุ้มกันแล้ว", ปี พ.ศ., หรือดำเนินการรับเอง
+        isSafe = true;
+        allocationReason = `มีบันทึกในระบบ (${summaryQ})`;
+      } else if (isHbsAbPos) {
+        // ผลแล็บตรวจพบภูมิแล้ว
+        isSafe = true;
+        allocationReason = 'ตรวจพบภูมิคุ้มกันแล้ว (HBsAb Positive)';
+      } else if (dosesGiven === 3) {
+        // ฉีดครบ 3 เข็มแล้ว
+        isSafe = true;
+        allocationReason = 'ได้รับวัคซีนครบ 3 เข็มแล้ว';
+      } else {
+        // ไม่มีข้อมูลใน Q และยังไม่มีภูมิ -> เข้าเกณฑ์ควรได้รับการจัดสรร
+        needAllocation = true;
+        if (isHbsAbNeg) {
+          allocationReason = 'HBsAb Negative (ไม่มีภูมิคุ้มกัน)';
+        } else if (intentL.includes('ต้องการ') || intentL.includes('ขอรับ') || intentL.includes('ไม่มีภูมิ')) {
+          allocationReason = `เจตจำนงระบุ: ${intentL}`;
+        } else if (dosesGiven > 0 && dosesGiven < 3) {
+          allocationReason = `ยังฉีดไม่ครบ (${remainingText})`;
+        } else {
+          allocationReason = 'ยังไม่มีภูมิ / รอรับการจัดสรรวัคซีน';
+        }
       }
 
-      const hasPlan = (y2568 && y2568 !== '-') || (y2569 && y2569 !== '-');
-
-      const actions = [];
-      if (needHepB) actions.push(`ควรได้รับวัคซีน Hepatitis B (${needHepBReason})`);
-      if (needVaricella) actions.push(`ควรได้รับวัคซีนสุกใส (${needVaricellaReason})`);
-      if (hasPlan) {
-        if (y2568 && y2568 !== '-') actions.push(`แผนรับปี 2568: ${y2568}`);
-        if (y2569 && y2569 !== '-') actions.push(`แผนรับปี 2569: ${y2569}`);
-      }
+      const hasAnyLab = hbsAgN !== '-' || hbsAbO !== '-' || hbcAbP !== '-';
 
       return {
+        intentL,
+        yearM,
+        hbsAgN,
+        hbsAbO,
+        hbcAbP,
+        summaryQ,
+        hasSummaryQ,
+        dose1R,
+        dose2S,
+        dose3T,
+        dosesGiven,
+        doseSummaryText,
+        remainingText,
         hasAnyLab,
-        unifiedLabDate,
-        summaryAB,
-        yearV,
-        dateW,
-        historyX,
-        doseInfo,
-        needHepB,
-        needHepBReason,
-        isHepBImmune,
-        needVaricella,
-        needVaricellaReason,
-        isVaricellaImmune,
-        hasPlan,
-        hasAction: actions.length > 0,
-        actions
+        needAllocation,
+        isSafe,
+        allocationReason
       };
     }
 
@@ -623,6 +507,7 @@
           header: true,
           skipEmptyLines: true,
           complete: function(r) {
+            tableHeaders = r.meta.fields || [];
             processRawData(r.data);
             statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> ดึงชีตสดสำเร็จ (${staffData.length} คน)`;
           }
@@ -640,10 +525,12 @@
       }));
 
       document.getElementById('statTotal').innerText = staffData.length.toLocaleString();
-      document.getElementById('statNeedHepB').innerText = processedList.filter(p => p.eval.needHepB).length.toLocaleString();
-      document.getElementById('statNeedVaricella').innerText = processedList.filter(p => p.eval.needVaricella).length.toLocaleString();
-      document.getElementById('statHasPlan').innerText = processedList.filter(p => p.eval.hasPlan).length.toLocaleString();
-      document.getElementById('actionCountBadge').innerText = processedList.filter(p => p.eval.hasAction).length;
+      const safeCount = processedList.filter(p => p.eval.isSafe).length;
+      const needCount = processedList.filter(p => p.eval.needAllocation).length;
+
+      document.getElementById('statSafeHepB').innerText = safeCount.toLocaleString();
+      document.getElementById('statNeedHepB').innerText = needCount.toLocaleString();
+      document.getElementById('actionCountBadge').innerText = needCount;
 
       renderActionTable();
     }
@@ -655,6 +542,7 @@
           header: true,
           skipEmptyLines: true,
           complete: function(r) {
+            tableHeaders = r.meta.fields || [];
             processRawData(r.data);
             document.getElementById('dataStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> โหลดจากไฟล์แล้ว (${staffData.length} คน)`;
           }
@@ -706,7 +594,9 @@
             <span class="text-xs text-slate-500 ml-2">HN: ${m.raw['HN'] || '-'}</span>
             <div class="text-[11px] text-slate-400">${m.raw['ตำแหน่งสายงาน'] || ''} - ${m.raw['หน่วยงาน'] || ''}</div>
           </div>
-          ${m.eval.hasAction ? '<span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-semibold">ควรรับวัคซีน</span>' : '<span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-semibold">ภูมิครบ</span>'}
+          ${m.eval.needAllocation 
+            ? '<span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">ควรจัดสรร</span>' 
+            : '<span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-semibold">ไม่ต้องจัดสรร</span>'}
         </div>
       `).join('');
       dropdown.classList.remove('hidden');
@@ -722,27 +612,27 @@
       dropdown.classList.add('hidden');
       searchInput.value = `${p['คำนำหน้า'] || ''}${p['ชื่อ'] || ''} ${p['นามสกุล'] || ''}`.trim();
 
-      // Card คำแนะนำ
+      // Card คำแนะนำด้านบน
       const recCard = document.getElementById('recommendationCard');
       const recIcon = document.getElementById('recommendationIcon');
       const recTitle = document.getElementById('recommendationTitle');
       const recList = document.getElementById('recommendationList');
 
-      if (ev.hasAction) {
+      if (ev.needAllocation) {
         recCard.className = 'p-5 rounded-2xl border badge-action flex items-start gap-4';
         recIcon.innerHTML = `<i data-lucide="alert-circle" class="w-6 h-6 text-orange-600"></i>`;
-        recTitle.innerText = 'มีรายการวัคซีนที่ควรได้รับหรือติดตาม';
+        recTitle.innerText = 'ควรได้รับการจัดสรรวัคซีน Hepatitis B';
         recTitle.className = 'text-base font-bold text-orange-800 mt-0.5';
-        recList.innerHTML = ev.actions.map(a => `<li>${a}</li>`).join('');
+        recList.innerHTML = `<li>${ev.allocationReason}</li>`;
       } else {
         recCard.className = 'p-5 rounded-2xl border badge-safe flex items-start gap-4';
         recIcon.innerHTML = `<i data-lucide="check-circle" class="w-6 h-6 text-emerald-600"></i>`;
-        recTitle.innerText = 'มีภูมิคุ้มกัน / ไม่มีรายการวัคซีนที่ต้องฉีดเพิ่มในขณะนี้';
+        recTitle.innerText = 'กลุ่มงานไม่ได้จัดสรรวัคซีน Hep B ให้เพิ่มอีก';
         recTitle.className = 'text-base font-bold text-emerald-800 mt-0.5';
-        recList.innerHTML = `<li>ภูมิคุ้มกันไวรัสตับอักเสบ บี และประวัติสุกใสครบถ้วน</li>`;
+        recList.innerHTML = `<li>${ev.allocationReason}</li>`;
       }
 
-      // Demographic
+      // ข้อมูลทั่วไป
       document.getElementById('pAvatar').innerText = (p['ชื่อ'] || '').substring(0, 2);
       document.getElementById('pFullName').innerText = `${p['คำนำหน้า'] || ''}${p['ชื่อ'] || ''} ${p['นามสกุล'] || ''}`;
       document.getElementById('pStatusBadge').innerText = cleanVal(p['สถานะ']);
@@ -752,62 +642,46 @@
       document.getElementById('pDob').innerText = cleanVal(p['วันเกิด']);
 
       // ================== HEP B ACCORDION POPULATE ==================
-      document.getElementById('hepBOverviewSub').innerText = ev.isHepBImmune 
-        ? 'มีภูมิคุ้มกันแล้ว (ไม่ต้องรับวัคซีน)' 
-        : (ev.needHepB ? `ควรได้รับวัคซีน (${ev.needHepBReason})` : 'ไม่มีข้อมูลประวัติวัคซีน');
-      
-      document.getElementById('quickHbsAb').innerHTML = renderLabBadge(p['HbsAb']);
-      document.getElementById('quickDoseProgress').innerText = `ฉีดแล้ว ${ev.doseInfo.dosesGiven} / 3 เข็ม`;
-      document.getElementById('quickRemainingDoses').innerText = ev.doseInfo.remainingText;
+      document.getElementById('hepBOverviewSub').innerText = ev.needAllocation
+        ? `ควรได้รับการจัดสรรวัคซีน (${ev.allocationReason})`
+        : `ไม่ต้องจัดสรรวัคซีน (${ev.allocationReason})`;
 
-      // 1. เจตจำนงจากการสำรวจปี 2569 (คอลัมน์ AB)
-      document.getElementById('tSurveyIntent').innerText = ev.summaryAB !== '-' ? ev.summaryAB : 'ไม่ได้ระบุเจตจำนงในการสำรวจ';
+      document.getElementById('quickHbsAb').innerHTML = renderLabBadge(ev.hbsAbO);
+      document.getElementById('quickDoseProgress').innerText = `ฉีดแล้ว ${ev.dosesGiven} / 3 เข็ม`;
+      document.getElementById('quickAllocationStatus').innerText = ev.needAllocation ? 'ควรได้รับการจัดสรร' : 'ไม่ต้องจัดสรรให้อีก';
 
-      // 2. ประวัติตามปี (V, W, X)
-      document.getElementById('tYearV').innerText = ev.yearV !== '-' ? `ปี ${ev.yearV}` : '-';
-      document.getElementById('tDateW').innerText = ev.dateW;
-      document.getElementById('tHistoryX').innerText = ev.historyX;
+      // 1. เจตจำนง (คอลัมน์ L)
+      document.getElementById('tSurveyIntent').innerText = ev.intentL;
 
-      // 3. ผลการตรวจทางแลป
-      document.getElementById('tLabDateUnified').innerText = `วันที่เจาะตรวจ: ${ev.unifiedLabDate}`;
+      // 2. ปีที่เจาะตรวจ (คอลัมน์ M)
+      document.getElementById('tYearM').innerText = ev.yearM !== '-' ? `ปี ${ev.yearM}` : 'ไม่มีข้อมูลปีที่ตรวจ';
+
+      // 3. ผลแล็บ (N, O, P) & สรุป (Q)
       const labGrid = document.getElementById('labGridContainer');
       const noLabNotice = document.getElementById('noLabNotice');
       if (ev.hasAnyLab) {
         labGrid.classList.remove('hidden');
         noLabNotice.classList.add('hidden');
-        document.getElementById('tHbsAg').innerHTML = renderLabBadge(p['HbsAg']);
-        document.getElementById('tHbsAb').innerHTML = renderLabBadge(p['HbsAb']);
-        document.getElementById('tHbcAb').innerHTML = renderLabBadge(p['HBcAB']);
+        document.getElementById('tHbsAg').innerHTML = renderLabBadge(ev.hbsAgN);
+        document.getElementById('tHbsAb').innerHTML = renderLabBadge(ev.hbsAbO);
+        document.getElementById('tHbcAb').innerHTML = renderLabBadge(ev.hbcAbP);
       } else {
         labGrid.classList.add('hidden');
         noLabNotice.classList.remove('hidden');
       }
-      document.getElementById('tSummaryFromAB').innerText = ev.summaryAB;
 
-      // 4. วัคซีนทั้ง 3 เข็ม & การคาดการณ์
-      document.getElementById('tDose1').innerText = ev.doseInfo.d1;
-      document.getElementById('tDose2').innerText = ev.doseInfo.d2;
-      document.getElementById('tDose3').innerText = ev.doseInfo.d3;
-      document.getElementById('tRemainingStatus').innerText = ev.doseInfo.remainingText;
-      document.getElementById('tNextDoseEstimate').innerText = ev.doseInfo.estimateText;
+      document.getElementById('tSummaryQ').innerText = ev.summaryQ !== '-' ? ev.summaryQ : 'ไม่มีข้อมูลบันทึกในคอลัมน์นี้';
+
+      // 4. เข็ม 1, 2, 3 (R, S, T)
+      document.getElementById('tDose1').innerText = ev.dose1R;
+      document.getElementById('tDose2').innerText = ev.dose2S;
+      document.getElementById('tDose3').innerText = ev.dose3T;
+      document.getElementById('tDoseSummaryText').innerText = ev.doseSummaryText;
+      document.getElementById('tRemainingDoseCount').innerText = ev.remainingText;
 
       document.getElementById('hepBHistoryTimeline').classList.add('hidden');
       document.getElementById('toggleIcon').classList.remove('rotate-180');
       document.getElementById('toggleText').innerText = 'ดูประวัติแบบละเอียด';
-
-      // ================== VARICELLA & ANNUAL ==================
-      document.getElementById('pVaricellaSummary').innerText = cleanVal(p['สรุปการได้รับฉีดวัคซีนสุกใส (ระบุปีที่ฉีดเข็ม 1?) - ข้อมูลจาก Occmed/Plan/IC']);
-      document.getElementById('pVar1').innerText = cleanVal(p['สุกใส เข็ม 1']);
-      document.getElementById('pVar2').innerText = cleanVal(p['สุกใส เข็ม 2']);
-      const note = cleanVal(p['หมายเหตุ']);
-      const varNoteEl = document.getElementById('pVaricellaNote');
-      varNoteEl.innerText = note !== '-' ? note : 'ไม่มีบันทึกประวัติป่วย';
-      varNoteEl.className = note.includes('เคยป่วย') ? 'text-xs px-2 py-0.5 rounded border badge-pos font-semibold' : 'text-xs px-2 py-0.5 rounded border text-slate-500';
-
-      ['2565', '2566', '2567', '2568', '2569'].forEach(yr => {
-        document.getElementById(`pY${yr}`).innerText = cleanVal(p[yr]);
-        document.getElementById(`pDate${yr}`).innerText = cleanVal(p[`Injected Date ${yr}`]);
-      });
 
       document.getElementById('emptyState').classList.add('hidden');
       document.getElementById('profileContainer').classList.remove('hidden');
@@ -816,21 +690,13 @@
 
     // ================== ACTION LIST TABLE ==================
     function renderActionTable() {
-      const filterType = document.getElementById('actionFilterSelect').value;
       const tbody = document.getElementById('actionTableBody');
 
-      let list = processedList.filter(p => {
-        if (filterType === 'ALL_ACTION') return p.eval.hasAction;
-        if (filterType === 'NEED_HEPB') return p.eval.needHepB;
-        if (filterType === 'NEED_VARICELLA') return p.eval.needVaricella;
-        if (filterType === 'HAS_PLAN') return p.eval.hasPlan;
-        return true;
-      });
-
-      document.getElementById('actionFilterCount').innerText = `พบ ${list.length} คน`;
+      let list = processedList.filter(p => p.eval.needAllocation);
+      document.getElementById('actionFilterCount').innerText = `(${list.length} คน)`;
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">ไม่มีรายชื่อที่ต้องดำเนินการในเงื่อนไขนี้</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">ไม่มีรายชื่อที่ต้องจัดสรรวัคซีน Hep B ในขณะนี้</td></tr>`;
         return;
       }
 
@@ -848,20 +714,10 @@
               <div class="font-medium text-slate-700 truncate">${d['ตำแหน่งสายงาน'] || '-'}</div>
               <div class="text-[10px] text-slate-400 truncate">${d['หน่วยงาน'] || '-'}</div>
             </td>
-            <td class="p-3 text-slate-600 font-medium whitespace-nowrap">${ev.unifiedLabDate}</td>
-            <td class="p-3">
-              ${ev.isHepBImmune ? '<span class="text-emerald-700 font-medium">มีภูมิแล้ว</span>' : 
-                (ev.needHepB ? `<span class="text-orange-700 font-semibold">${ev.needHepBReason}</span>` : '<span class="text-slate-400">-</span>')}
-            </td>
-            <td class="p-3">
-              ${ev.isVaricellaImmune ? '<span class="text-emerald-700 font-medium">มีภูมิ/เคยป่วย</span>' : 
-                (ev.needVaricella ? `<span class="text-rose-700 font-semibold">${ev.needVaricellaReason}</span>` : '<span class="text-slate-400">-</span>')}
-            </td>
-            <td class="p-3 max-w-xs">
-              <div class="text-[11px] text-slate-700 space-y-0.5">
-                ${ev.actions.map(a => `<div class="truncate">• ${a}</div>`).join('')}
-              </div>
-            </td>
+            <td class="p-3 max-w-[150px] truncate" title="${ev.intentL}">${ev.intentL}</td>
+            <td class="p-3">${renderLabBadge(ev.hbsAbO)}</td>
+            <td class="p-3 whitespace-nowrap text-slate-600">${ev.doseSummaryText}</td>
+            <td class="p-3 text-amber-800 font-medium">${ev.allocationReason}</td>
             <td class="p-3 text-center">
               <button onclick="goToPerson('${d['ลำดับ']}')" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white rounded border border-emerald-200 transition font-medium">
                 ดูประวัติ
@@ -898,24 +754,21 @@
     }
 
     function exportActionCSV() {
-      const filterType = document.getElementById('actionFilterSelect').value;
-      const list = processedList.filter(p => {
-        if (filterType === 'ALL_ACTION') return p.eval.hasAction;
-        if (filterType === 'NEED_HEPB') return p.eval.needHepB;
-        if (filterType === 'NEED_VARICELLA') return p.eval.needVaricella;
-        if (filterType === 'HAS_PLAN') return p.eval.hasPlan;
-        return true;
-      });
+      const list = processedList.filter(p => p.eval.needAllocation);
 
       const csvData = list.map(item => ({
         'HN': item.raw['HN'],
         'ชื่อ-สกุล': `${item.raw['คำนำหน้า'] || ''}${item.raw['ชื่อ'] || ''} ${item.raw['นามสกุล'] || ''}`.trim(),
         'ตำแหน่ง': item.raw['ตำแหน่งสายงาน'],
         'หน่วยงาน': item.raw['หน่วยงาน'],
-        'วันที่ตรวจ Hep B': item.eval.unifiedLabDate,
-        'สถานะ Hep B': item.eval.needHepB ? item.eval.needHepBReason : (item.eval.isHepBImmune ? 'มีภูมิแล้ว' : '-'),
-        'สถานะสุกใส': item.eval.needVaricella ? item.eval.needVaricellaReason : (item.eval.isVaricellaImmune ? 'มีภูมิ/เคยป่วย' : '-'),
-        'คำแนะนำ / การดำเนินการ': item.eval.actions.join(' | ')
+        'เจตจำนง (L)': item.eval.intentL,
+        'ปีที่เจาะตรวจ (M)': item.eval.yearM,
+        'HBsAb (O)': item.eval.hbsAbO,
+        'สรุปในระบบ (Q)': item.eval.summaryQ,
+        'เข็ม 1 (R)': item.eval.dose1R,
+        'เข็ม 2 (S)': item.eval.dose2S,
+        'เข็ม 3 (T)': item.eval.dose3T,
+        'เหตุผลที่ควรจัดสรร': item.eval.allocationReason
       }));
 
       const csv = Papa.unparse(csvData);
@@ -923,7 +776,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `รายชื่อผู้ควรได้รับวัคซีน_${new Date().toISOString().slice(0,10)}.csv`;
+      a.download = `รายชื่อผู้ควรได้รับการจัดสรร_HepB_${new Date().toISOString().slice(0,10)}.csv`;
       a.click();
     }
 
