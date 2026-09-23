@@ -91,6 +91,10 @@
         <span>รายชื่อผู้ควรได้รับการจัดสรร / ติดตาม</span>
         <span id="actionCountBadge" class="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
       </button>
+      <button onclick="switchTab('master')" id="tabBtnMaster" class="pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+        <i data-lucide="table" class="w-4 h-4"></i>
+        <span>แดชบอร์ดข้อมูลรวม (Master Grid)</span>
+      </button>
     </div>
 
     <!-- ==================== TAB 1: INDIVIDUAL SEARCH ==================== -->
@@ -454,7 +458,80 @@
         </div>
       </div>
     </div>
+      <!-- ==================== TAB 3: MASTER DATA GRID ==================== -->
+    <div id="tabMasterSection" class="hidden space-y-4">
+      <!-- Master Filters Toolbar -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+        <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
+          <div class="relative w-full md:w-80">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="masterSearchInput" oninput="applyMasterFilters()" placeholder="ค้นหา ชื่อ, HN, ตำแหน่ง..." 
+                   class="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-slate-50 focus:bg-white" />
+          </div>
 
+          <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <select id="masterDeptFilter" onchange="applyMasterFilters()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 max-w-[180px] truncate">
+              <option value="">ทุกหน่วยงาน / แผนก</option>
+            </select>
+
+            <select id="masterHepFilter" onchange="applyMasterFilters()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600">
+              <option value="">สถานะ Hep B ทั้งหมด</option>
+              <option value="IN_PROGRESS">อยู่ระหว่างรับวัคซีน Hep B</option>
+              <option value="NEED_NEW">รอจัดสรร Hep B ใหม่</option>
+              <option value="SAFE">ไม่ต้องจัดสรร Hep B (มีภูมิ/ครบ)</option>
+            </select>
+
+            <select id="masterVarFilter" onchange="applyMasterFilters()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600">
+              <option value="">สถานะสุกใส ทั้งหมด</option>
+              <option value="IN_PROGRESS">อยู่ระหว่างรับวัคซีนสุกใส</option>
+              <option value="NEED_NEW">รอจัดสรรสุกใสใหม่</option>
+              <option value="SAFE">ไม่ต้องจัดสรรสุกใส (มีภูมิ/เคยป่วย)</option>
+            </select>
+
+            <button onclick="resetMasterFilters()" class="px-2.5 py-2 text-xs text-slate-600 hover:text-slate-900 border border-slate-300 rounded-lg bg-slate-50 hover:bg-slate-100">
+              รีเซ็ต
+            </button>
+            <button onclick="exportMasterCSV()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              <span>ส่งออกตาราง</span>
+            </button>
+          </div>
+        </div>
+        <div class="text-[11px] text-slate-500 flex justify-between items-center pt-1 border-t border-slate-100">
+          <span id="masterFilterCount">แสดง 0 รายการ</span>
+          <span class="text-slate-400">* เลื่อนตารางแนวนอนเพื่อดูคอลัมน์ผลตรวจและประวัติเข็ม 1-3</span>
+        </div>
+      </div>
+
+      <!-- Master Table Container -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto max-h-[650px] overflow-y-auto">
+          <table class="w-full text-left text-xs border-collapse whitespace-nowrap">
+            <thead class="bg-slate-100 text-slate-700 font-semibold sticky top-0 border-b z-10 text-[11px]">
+              <tr>
+                <th class="p-3 text-center w-12 sticky left-0 bg-slate-100 z-20">ลำดับ</th>
+                <th class="p-3 sticky left-12 bg-slate-100 z-20">ชื่อ - นามสกุล</th>
+                <th class="p-3">HN</th>
+                <th class="p-3">ตำแหน่ง / หน่วยงาน</th>
+                <th class="p-3">เจตจำนง (L)</th>
+                <th class="p-3 text-center">ปีตรวจ (M)</th>
+                <th class="p-3 text-center">HBsAg (N)</th>
+                <th class="p-3 text-center">HBsAb (O)</th>
+                <th class="p-3 text-center">HBcAb (P)</th>
+                <th class="p-3">สรุป Hep B (Q)</th>
+                <th class="p-3">Hep B เข็ม 1-3 (R, S, T)</th>
+                <th class="p-3">สถานะดูแล Hep B</th>
+                <th class="p-3">สุกใส เข็ม 1-2 (U, V)</th>
+                <th class="p-3">สรุปสุกใส (W, X)</th>
+                <th class="p-3">สถานะดูแลสุกใส</th>
+                <th class="p-3 text-center">ดูประวัติ</th>
+              </tr>
+            </thead>
+            <tbody id="masterTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </main>
 
   <script>
@@ -819,6 +896,7 @@
       
       document.getElementById('actionCountBadge').innerText = inProgressCount + needNewCount;
 
+      populateMasterDepts(); // <--- แทรกตรงนี้ครับ
       renderActionTable();
     }
 
@@ -1139,19 +1217,31 @@
     function switchTab(tab) {
       const searchSec = document.getElementById('tabSearchSection');
       const actionSec = document.getElementById('tabActionSection');
+      const masterSec = document.getElementById('tabMasterSection');
       const btnSearch = document.getElementById('tabBtnSearch');
       const btnAction = document.getElementById('tabBtnAction');
+      const btnMaster = document.getElementById('tabBtnMaster');
+
+      const activeClass = 'pb-3 text-sm font-semibold text-emerald-700 border-b-2 border-emerald-600 flex items-center gap-1.5';
+      const inactiveClass = 'pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5';
+
+      searchSec.classList.add('hidden');
+      actionSec.classList.add('hidden');
+      masterSec.classList.add('hidden');
+      btnSearch.className = inactiveClass;
+      btnAction.className = inactiveClass;
+      btnMaster.className = inactiveClass;
 
       if (tab === 'search') {
         searchSec.classList.remove('hidden');
-        actionSec.classList.add('hidden');
-        btnSearch.className = 'pb-3 text-sm font-semibold text-emerald-700 border-b-2 border-emerald-600 flex items-center gap-1.5';
-        btnAction.className = 'pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5';
-      } else {
-        searchSec.classList.add('hidden');
+        btnSearch.className = activeClass;
+      } else if (tab === 'action') {
         actionSec.classList.remove('hidden');
-        btnAction.className = 'pb-3 text-sm font-semibold text-emerald-700 border-b-2 border-emerald-600 flex items-center gap-1.5';
-        btnSearch.className = 'pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5';
+        btnAction.className = activeClass;
+      } else if (tab === 'master') {
+        masterSec.classList.remove('hidden');
+        btnMaster.className = activeClass;
+        applyMasterFilters(); // รันเรนเดอร์ตารางรวม
       }
     }
 
@@ -1189,7 +1279,142 @@
       a.download = `รายชื่อติดตามวัคซีน_${new Date().toISOString().slice(0,10)}.csv`;
       a.click();
     }
+    // ================== MASTER GRID CONTROLLERS ==================
+    let masterFilteredList = [];
 
+    function populateMasterDepts() {
+      const depts = [...new Set(staffData.map(d => d['หน่วยงาน']).filter(Boolean))].sort();
+      const sel = document.getElementById('masterDeptFilter');
+      if (sel) {
+        sel.innerHTML = '<option value="">ทุกหน่วยงาน / แผนก</option>' + 
+          depts.map(d => `<option value="${d}">${d}</option>`).join('');
+      }
+    }
+
+    function applyMasterFilters() {
+      const q = (document.getElementById('masterSearchInput')?.value || '').trim().toLowerCase();
+      const dept = document.getElementById('masterDeptFilter')?.value || '';
+      const hepFilter = document.getElementById('masterHepFilter')?.value || '';
+      const varFilter = document.getElementById('masterVarFilter')?.value || '';
+
+      masterFilteredList = processedList.filter(p => {
+        const d = p.raw;
+        const fullName = `${d['คำนำหน้า'] || ''}${d['ชื่อ'] || ''} ${d['นามสกุล'] || ''}`.toLowerCase();
+        const hn = String(d['HN'] || '').toLowerCase();
+        const pos = String(d['ตำแหน่งสายงาน'] || '').toLowerCase();
+
+        const matchQ = !q || fullName.includes(q) || hn.includes(q) || pos.includes(q);
+        const matchDept = !dept || d['หน่วยงาน'] === dept;
+        const matchHep = !hepFilter || p.eval.policyCategory === hepFilter;
+        const matchVar = !varFilter || p.eval.varPolicyCategory === varFilter;
+
+        return matchQ && matchDept && matchHep && matchVar;
+      });
+
+      renderMasterTable(masterFilteredList);
+    }
+
+    function resetMasterFilters() {
+      if (document.getElementById('masterSearchInput')) document.getElementById('masterSearchInput').value = '';
+      if (document.getElementById('masterDeptFilter')) document.getElementById('masterDeptFilter').value = '';
+      if (document.getElementById('masterHepFilter')) document.getElementById('masterHepFilter').value = '';
+      if (document.getElementById('masterVarFilter')) document.getElementById('masterVarFilter').value = '';
+      applyMasterFilters();
+    }
+
+    function renderMasterTable(list) {
+      const tbody = document.getElementById('masterTableBody');
+      const countEl = document.getElementById('masterFilterCount');
+      if (countEl) countEl.innerText = `แสดง ${list.length} รายการ (จากทั้งหมด ${staffData.length} รายการ)`;
+
+      if (!tbody) return;
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="16" class="p-8 text-center text-slate-400">ไม่พบข้อมูลตามเงื่อนไขที่ค้นหา</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map((item, idx) => {
+        const d = item.raw;
+        const ev = item.eval;
+        const fullName = `${d['คำนำหน้า'] || ''}${d['ชื่อ'] || ''} ${d['นามสกุล'] || ''}`.trim();
+
+        let hepBadge = '';
+        if (ev.isInProgress) hepBadge = '<span class="badge-inprogress px-2 py-0.5 rounded text-[10px] font-bold">อยู่ระหว่างรับวัคซีน</span>';
+        else if (ev.needNewAllocation) hepBadge = '<span class="badge-action px-2 py-0.5 rounded text-[10px] font-bold">รอจัดสรรใหม่</span>';
+        else hepBadge = '<span class="badge-safe px-2 py-0.5 rounded text-[10px] font-bold">ไม่ต้องจัดสรร</span>';
+
+        let varBadge = '';
+        if (ev.isVarInProgress) varBadge = '<span class="badge-inprogress px-2 py-0.5 rounded text-[10px] font-bold">อยู่ระหว่างรับวัคซีน</span>';
+        else if (ev.needNewVarAllocation) varBadge = '<span class="badge-action px-2 py-0.5 rounded text-[10px] font-bold">รอจัดสรรใหม่</span>';
+        else varBadge = '<span class="badge-safe px-2 py-0.5 rounded text-[10px] font-bold">ไม่ต้องจัดสรร</span>';
+
+        const hepDoses = [ev.dose1R, ev.dose2S, ev.dose3T].map(x => x !== '-' ? x : '—').join(' | ');
+        const varDoses = [ev.varDose1U, ev.varDose2V].map(x => x !== '-' ? x : '—').join(' | ');
+
+        return `
+          <tr class="hover:bg-slate-50 border-b transition">
+            <td class="p-3 text-center text-slate-400 sticky left-0 bg-white">${idx + 1}</td>
+            <td class="p-3 font-semibold text-slate-800 sticky left-12 bg-white">${fullName}</td>
+            <td class="p-3 font-mono text-slate-600">${d['HN'] || '-'}</td>
+            <td class="p-3 max-w-[180px] truncate" title="${d['ตำแหน่งสายงาน']} (${d['หน่วยงาน']})">
+              <span class="font-medium text-slate-700">${d['ตำแหน่งสายงาน'] || '-'}</span>
+              <span class="text-[10px] text-slate-400 block">${d['หน่วยงาน'] || '-'}</span>
+            </td>
+            <td class="p-3 max-w-[140px] truncate" title="${ev.intentL}">${ev.intentL}</td>
+            <td class="p-3 text-center">${ev.yearM}</td>
+            <td class="p-3 text-center">${renderLabBadge(ev.hbsAgN)}</td>
+            <td class="p-3 text-center">${renderLabBadge(ev.hbsAbO)}</td>
+            <td class="p-3 text-center">${renderLabBadge(ev.hbcAbP)}</td>
+            <td class="p-3 max-w-[140px] truncate" title="${ev.summaryQ}">${ev.summaryQ}</td>
+            <td class="p-3 text-slate-700 font-mono text-[11px]">${hepDoses}</td>
+            <td class="p-3">${hepBadge}</td>
+            <td class="p-3 text-slate-700 font-mono text-[11px]">${varDoses}</td>
+            <td class="p-3 max-w-[140px] truncate" title="สรุป: ${ev.varSummaryW} | หมายเหตุ: ${ev.varNoteX}">
+              ${ev.varNoteX !== '-' ? ev.varNoteX : ev.varSummaryW}
+            </td>
+            <td class="p-3">${varBadge}</td>
+            <td class="p-3 text-center">
+              <button onclick="goToPerson('${d['ลำดับ']}')" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white rounded border border-emerald-200 transition font-medium">
+                ดูโปรไฟล์
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function exportMasterCSV() {
+      const csvData = masterFilteredList.map(item => ({
+        'HN': item.raw['HN'],
+        'ชื่อ-สกุล': `${item.raw['คำนำหน้า'] || ''}${item.raw['ชื่อ'] || ''} ${item.raw['นามสกุล'] || ''}`.trim(),
+        'ตำแหน่ง': item.raw['ตำแหน่งสายงาน'],
+        'หน่วยงาน': item.raw['หน่วยงาน'],
+        'เจตจำนง (L)': item.eval.intentL,
+        'ปีที่เจาะตรวจ (M)': item.eval.yearM,
+        'HBsAg (N)': item.eval.hbsAgN,
+        'HBsAb (O)': item.eval.hbsAbO,
+        'HBcAb (P)': item.eval.hbcAbP,
+        'สรุป Hep B (Q)': item.eval.summaryQ,
+        'Hep B เข็ม 1 (R)': item.eval.dose1R,
+        'Hep B เข็ม 2 (S)': item.eval.dose2S,
+        'Hep B เข็ม 3 (T)': item.eval.dose3T,
+        'สถานะดูแล Hep B': item.eval.policyTitle,
+        'สุกใส เข็ม 1 (U)': item.eval.varDose1U,
+        'สุกใส เข็ม 2 (V)': item.eval.varDose2V,
+        'สรุปสุกใส (W)': item.eval.varSummaryW,
+        'หมายเหตุสุกใส (X)': item.eval.varNoteX,
+        'สถานะดูแลสุกใส': item.eval.varPolicyTitle
+      }));
+
+      const csv = Papa.unparse(csvData);
+      const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ตารางข้อมูลรวม_MasterGrid_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+    }
     window.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
       initData();
