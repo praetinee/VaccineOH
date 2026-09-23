@@ -664,7 +664,7 @@
     // ================== LOGIC ประมวลผลคำแนะนำ ==================
     function evaluateVaccineStatus(d) {
       const intentL = getColValue(d, 'L', ['เจตจำนง', 'ผลสรุปไวรัสตับอักเสบบี']);
-      const yearM = getColValue(d, 'M', ['ปีที่ตรวจ Hep', 'ปีที่ตรวจ Heb']);
+      const yearM = getColValue(d, 'M', ['ปีที่เจาะเลือดตรวจภูมิ', 'ปีที่ตรวจ Hep', 'ปีที่ตรวจ Heb', 'ปีที่เจาะเลือด']);
       const hbsAgN = getColValue(d, 'N', ['HbsAg']);
       const hbsAbO = getColValue(d, 'O', ['HbsAb']);
       const hbcAbP = getColValue(d, 'P', ['HBcAB']);
@@ -1320,11 +1320,19 @@
         const matchDept = !dept || d['หน่วยงาน'] === dept;
         
         let matchVType = true;
-        if (vTypeFilter === 'HEPB') matchVType = p.eval.isInProgress || p.eval.needNewAllocation;
-        else if (vTypeFilter === 'VAR') matchVType = p.eval.isVarInProgress || p.eval.needNewVarAllocation;
-        else if (vTypeFilter === 'FLU') matchVType = p.eval.fluY !== '-';
-        else if (vTypeFilter === 'MMR') matchVType = p.eval.mmrZ !== '-';
-        else if (vTypeFilter === 'TDAP') matchVType = p.eval.tdapAA !== '-';
+        if (vTypeFilter === 'HEPB') {
+          // แสดงทุกคนที่มีประวัติ Hep B (มีเจตจำนง / มีผลแล็บ / มีการฉีด / หรือมีสรุป)
+          matchVType = p.eval.intentL !== '-' || p.eval.hasAnyLab || p.eval.dosesGiven > 0 || p.eval.summaryQ !== '-';
+        } else if (vTypeFilter === 'VAR') {
+          // แสดงทุกคนที่มีประวัติสุกใส (มีประวัติฉีด / มีหมายเหตุเคยป่วย / หรือมีสรุป)
+          matchVType = p.eval.varDosesGiven > 0 || p.eval.varSummaryW !== '-' || p.eval.varNoteX !== '-';
+        } else if (vTypeFilter === 'FLU') {
+          matchVType = p.eval.fluY !== '-';
+        } else if (vTypeFilter === 'MMR') {
+          matchVType = p.eval.mmrZ !== '-';
+        } else if (vTypeFilter === 'TDAP') {
+          matchVType = p.eval.tdapAA !== '-';
+        }
         
         const matchVar = !varFilter || p.eval.varPolicyCategory === varFilter;
 
