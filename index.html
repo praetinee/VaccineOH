@@ -328,24 +328,21 @@
       </div>
       
       <div class="py-4 space-y-4 text-xs text-slate-600 leading-relaxed">
-        <div class="bg-teal-50/60 p-3 rounded-xl border border-teal-100 text-teal-900">
-          <p class="font-semibold mb-1"><i class="fa-solid fa-circle-info mr-1"></i>วิธีทำ Publish to Web บน Google Sheets:</p>
-          <ol class="list-decimal list-inside space-y-1 text-slate-700">
-            <li>เปิด Google Sheet ของคุณ</li>
-            <li>ไปที่เมนู <strong>File (ไฟล์) &gt; Share (แชร์) &gt; Publish to web (เผยแพร่ไปยังเว็บ)</strong></li>
-            <li>เลือกชีต <strong>"ประวัติการรับวัคซีน จนท."</strong> และเปลี่ยนรูปแบบเป็น <strong>Comma-separated values (.csv)</strong></li>
-            <li>คลิกปุ่ม "Publish" แล้วคัดลอกลิงก์มาวางในช่องด้านล่าง</li>
-          </ol>
-        </div>
-
-        <div>
-          <label class="block font-semibold text-slate-700 mb-1">URL ของไฟล์ CSV จาก Google Sheets:</label>
-          <textarea id="inputSheetUrl" rows="3" class="w-full p-2.5 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:outline-none" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?gid=...&single=true&output=csv"></textarea>
-          <p class="text-[11px] text-slate-400 mt-1">* ระบบจะบันทึกลิงก์นี้ไว้ในเบราว์เซอร์อัตโนมัติ (LocalStorage)</p>
-        </div>
+      <div class="bg-teal-50/60 p-3 rounded-xl border border-teal-100 text-teal-900">
+        <p class="font-semibold mb-1"><i class="fa-solid fa-circle-info mr-1"></i>แหล่งข้อมูลที่เชื่อมต่อปัจจุบัน:</p>
+        <p class="text-slate-700 font-mono text-[11px] break-all bg-white p-2 rounded border border-teal-200">
+          Google Sheet ID: 10S_z8e-xYBmzsWfYbOhSfSLc6-uFhsKy6-aGmMTqD48 (gid: 372638990)
+        </p>
       </div>
 
-      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+      <div>
+        <label class="block font-semibold text-slate-700 mb-1">URL ของไฟล์ CSV หรือ Google Sheets ลิงก์ตรง:</label>
+        <textarea id="inputSheetUrl" rows="3" class="w-full p-2.5 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:outline-none" placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv&gid=..."></textarea>
+        <p class="text-[11px] text-slate-400 mt-1">* ระบบเชื่อมต่อชีตของคุณเป็นค่าเริ่มต้นให้อัตโนมัติ และรองรับการดึงข้อมูลสดแบบเรียลไทม์</p>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
         <button id="btnCancelConfig" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium">ยกเลิก</button>
         <button id="btnSaveConfig" class="px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium">บันทึกและโหลดข้อมูลใหม่</button>
       </div>
@@ -391,8 +388,11 @@
     let chartVaricellaInstance = null;
     let chartDeptRiskInstance = null;
 
-    // Default Fallback file name in repo
-    const DEFAULT_LOCAL_CSV = 'ส_งคายนาว_คซ_น.csv';
+    // Default Google Sheets Live Export URL from user spreadsheet
+    const GOOGLE_SHEET_ID = '10S_z8e-xYBmzsWfYbOhSfSLc6-uFhsKy6-aGmMTqD48';
+    const GOOGLE_SHEET_GID = '372638990';
+    const DEFAULT_LIVE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=${GOOGLE_SHEET_GID}`;
+    const FALLBACK_LOCAL_CSV = 'ส_งคายนาว_คซ_น.csv';
     const STORAGE_KEY_URL = 'staff_vaccine_sheet_url';
 
     // DOM Elements
@@ -403,23 +403,40 @@
     const recordCount = document.getElementById('recordCount');
     const refreshIcon = document.getElementById('refreshIcon');
 
-    // Classify Hep B status
-    function classifyHepB(row) {
-      const ag = (row['HbsAg'] || '').trim().toLowerCase();
-      const ab = (row['HbsAb'] || '').trim().toLowerCase();
-      const summary = (row['สรุปการได้รับฉีดวัคซีน Hep B'] || '').trim();
-      const dose1 = (row['Hep B เข็ม 1'] || '').trim();
+    // Smart Field Getter to handle spacing and case sensitivity in column headers
+    function getVal(row, ...keys) {
+      if (!row) return '';
+      const rowKeys = Object.keys(row);
+      for (const k of keys) {
+        if (row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '') {
+          return String(row[k]).trim();
+        }
+        // Normalize search (lowercase & trim)
+        const targetClean = k.toLowerCase().replace(/\s+/g, '');
+        const matchedKey = rowKeys.find(rk => rk.toLowerCase().replace(/\s+/g, '') === targetClean);
+        if (matchedKey && row[matchedKey] !== undefined && row[matchedKey] !== null && String(row[matchedKey]).trim() !== '') {
+          return String(row[matchedKey]).trim();
+        }
+      }
+      return '';
+    }
 
-      if (ag === 'positive') {
+    // Classify Hep B status dynamically from row values
+    function classifyHepB(row) {
+      const ag = getVal(row, 'HbsAg', 'HBsAg', 'HBSAG').toLowerCase();
+      const ab = getVal(row, 'HbsAb', 'HBsAb', 'HBSAB').toLowerCase();
+      const summary = getVal(row, 'สรุปการได้รับฉีดวัคซีน Hep B', 'สรุปการได้รับฉีดวัคซีนHepB', 'Hep B สรุป');
+
+      if (ag.includes('positive') || ag === 'pos' || ag === '+') {
         return {
           status: 'HBsAg Positive (ส่งต่อรักษา)',
           badge: 'bg-rose-100 text-rose-800 border-rose-200',
           code: 'hbsag_positive',
-          action: 'ส่งพบแพทย์ OccMed/GI เพื่อประเมินการรักษา'
+          action: 'ส่งพบแพทย์ OccMed / GI เพื่อประเมินการรักษา'
         };
       }
 
-      if (ab === 'positive' || summary.includes('มีภูมิคุ้มกันแล้ว')) {
+      if (ab.includes('positive') || ab === 'pos' || ab === '+' || summary.includes('มีภูมิคุ้มกันแล้ว')) {
         return {
           status: 'มีภูมิคุ้มกันแล้ว',
           badge: 'bg-emerald-100 text-emerald-800 border-emerald-200',
@@ -428,8 +445,8 @@
         };
       }
 
-      if (ab === 'negative' || ab === 'weakly positive') {
-        if (summary && summary !== 'จำไม่ได้') {
+      if (ab.includes('negative') || ab === 'neg' || ab === '-' || ab.includes('weakly')) {
+        if (summary && !summary.includes('จำไม่ได้') && summary !== '-') {
           return {
             status: 'กำลังรับวัคซีน/มีประวัติฉีด',
             badge: 'bg-sky-100 text-sky-800 border-sky-200',
@@ -441,7 +458,7 @@
           status: 'ไม่มีภูมิ (ต้องรับวัคซีน)',
           badge: 'bg-amber-100 text-amber-800 border-amber-200',
           code: 'need_vaccine',
-          action: 'นัดหมายฉีดวัคซีน Hep B เข็ม 1 ด่วน'
+          action: 'นัดหมายฉีดวัคซีน Hep B ด่วน'
         };
       }
 
@@ -462,20 +479,20 @@
       };
     }
 
-    // Classify Varicella status
+    // Classify Varicella status dynamically from row values
     function classifyVaricella(row) {
-      const summary = (row['สรุปการได้รับฉีดวัคซีนสุกใส (ระบุปีที่ฉีดเข็ม 1) - ข้อมูลจาก Occmed/Plan/IC'] || '').trim();
-      const note = (row['หมายเหตุ(สุกใส)'] || '').trim();
-      const dose1 = (row['สุกใส เข็ม 1'] || '').trim();
+      const summary = getVal(row, 'สรุปการได้รับฉีดวัคซีนสุกใส (ระบุปีที่ฉีดเข็ม 1) - ข้อมูลจาก Occmed/Plan/IC', 'สรุปการได้รับฉีดวัคซีนสุกใส', 'วัคซีนสุกใส');
+      const note = getVal(row, 'หมายเหตุ(สุกใส)', 'หมายเหตุสุกใส', 'หมายเหตุ');
+      const dose1 = getVal(row, 'สุกใส เข็ม 1', 'สุกใสเข็ม 1', 'สุกใส1');
 
-      if (summary.includes('มีภูมิคุ้มกันแล้ว') || note.includes('เคยป่วย')) {
+      if (summary.includes('มีภูมิคุ้มกันแล้ว') || note.includes('เคยป่วย') || note.includes('มีภูมิ')) {
         return {
           status: 'มีภูมิคุ้มกันแล้ว (เคยป่วย/ฉีดแล้ว)',
           badge: 'bg-emerald-100 text-emerald-800 border-emerald-200',
           code: 'immune'
         };
       }
-      if (dose1 || summary.includes('25') || summary.includes('ได้รับแล้ว')) {
+      if (dose1 || summary.includes('25') || summary.includes('ได้รับแล้ว') || summary.includes('ฉีด')) {
         return {
           status: 'ฉีดแล้ว',
           badge: 'bg-cyan-100 text-cyan-800 border-cyan-200',
@@ -491,81 +508,99 @@
 
     async function loadData() {
       refreshIcon.classList.add('fa-spin');
-      statusText.textContent = 'กำลังโหลดข้อมูล...';
+      statusText.textContent = 'กำลังดึงข้อมูลสดจาก Google Sheets...';
       statusDot.className = 'relative inline-flex rounded-full h-3 w-3 bg-amber-500';
       statusPing.className = 'animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75';
 
-      let targetUrl = localStorage.getItem(STORAGE_KEY_URL);
-      if (!targetUrl || targetUrl.trim() === '') {
-        targetUrl = DEFAULT_LOCAL_CSV;
+      let configuredUrl = localStorage.getItem(STORAGE_KEY_URL);
+      if (!configuredUrl || configuredUrl.trim() === '') {
+        configuredUrl = DEFAULT_LIVE_SHEET_URL;
       }
 
-      try {
-        const response = await fetch(targetUrl, { cache: 'no-store' });
-        if (!response.ok) {
-          throw new Error('ไม่สามารถเข้าถึงแหล่งข้อมูลได้ (HTTP ' + response.status + ')');
-        }
-        const csvText = await response.text();
+      // Candidate list with fallback proxies if Google Sheets CORS blocks direct fetch
+      const candidateUrls = [
+        configuredUrl,
+        `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GOOGLE_SHEET_GID}`,
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(configuredUrl)}`,
+        FALLBACK_LOCAL_CSV
+      ];
 
-        Papa.parse(csvText, {
-          header: true,
-          skipEmptyLines: true,
-          complete: function(results) {
-            processParsedData(results.data);
-            statusText.textContent = 'เชื่อมต่อข้อมูลสำเร็จ';
-            statusDot.className = 'relative inline-flex rounded-full h-3 w-3 bg-emerald-500';
-            statusPing.className = 'hidden';
-            lastUpdated.textContent = '• อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH');
-            refreshIcon.classList.remove('fa-spin');
-          },
-          error: function(err) {
-            handleLoadError(err.message);
+      let csvText = null;
+      let usedSource = '';
+
+      for (const url of candidateUrls) {
+        try {
+          const resp = await fetch(url, { cache: 'no-store' });
+          if (resp.ok) {
+            const text = await resp.text();
+            // Validate that we received CSV with expected column headers or rows
+            if (text && (text.includes(',') || text.includes('\t')) && text.length > 50) {
+              csvText = text;
+              usedSource = url;
+              break;
+            }
           }
-        });
-      } catch (err) {
-        handleLoadError(err.message);
+        } catch (e) {
+          console.warn('Endpoint fetch attempt failed, trying next fallback:', url, e);
+        }
       }
-    }
 
-    function handleLoadError(message) {
-      refreshIcon.classList.remove('fa-spin');
-      statusText.textContent = 'เกิดข้อผิดพลาด: ' + message;
-      statusDot.className = 'relative inline-flex rounded-full h-3 w-3 bg-rose-500';
-      statusPing.className = 'hidden';
+      if (!csvText) {
+        handleLoadError('ไม่สามารถเชื่อมต่อไปยังชีตได้ (กรุณาตรวจสอบว่าชีตเปิดสิทธิ์ "ทุกคนที่มีลิงก์มีสิทธิ์ดู" หรือ Publish to Web เรียบร้อยแล้ว)');
+        return;
+      }
 
-      document.getElementById('tableBody').innerHTML = `
-        <tr>
-          <td colspan="9" class="px-4 py-8 text-center text-rose-600">
-            <i class="fa-solid fa-triangle-exclamation text-2xl mb-2 block"></i>
-            ไม่สามารถโหลดข้อมูลได้ (${message})<br>
-            <span class="text-xs text-slate-500">กรุณาตรวจสอบว่าได้ Publish to Web เป็น CSV หรือวางไฟล์ไว้ในโฟลเดอร์เรียบร้อยแล้ว</span>
-          </td>
-        </tr>
-      `;
+      Papa.parse(csvText, {
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          processParsedData(results.data);
+          statusText.textContent = 'เชื่อมต่อข้อมูลสดเรียบร้อย';
+          statusDot.className = 'relative inline-flex rounded-full h-3 w-3 bg-emerald-500';
+          statusPing.className = 'hidden';
+          lastUpdated.textContent = '• อัปเดตเมื่อ ' + new Date().toLocaleTimeString('th-TH');
+          refreshIcon.classList.remove('fa-spin');
+        },
+        error: function(err) {
+          handleLoadError(err.message);
+        }
+      });
     }
 
     function processParsedData(data) {
-      // Filter out invalid empty records
-      rawStaffData = data.filter(r => r['ชื่อ'] || r['เลขประจำตัวประชาชน'] || r['HN']).map((row, idx) => {
-        const hepBInfo = classifyHepB(row);
-        const varicellaInfo = classifyVaricella(row);
+      // Filter out empty rows and map every field purely from live data
+      rawStaffData = data.filter(r => {
+        const name = getVal(r, 'ชื่อ', 'name');
+        const idCard = getVal(r, 'เลขประจำตัวประชาชน', 'id');
+        const hn = getVal(r, 'HN', 'hn');
+        return name || idCard || hn;
+      }).map((row, idx) => {
+        const title = getVal(row, 'คำนำหน้า');
+        const fname = getVal(row, 'ชื่อ');
+        const lname = getVal(row, 'นามสกุล');
+        const fullName = `${title}${fname} ${lname}`.trim() || 'ไม่ระบุชื่อ';
+        const unit = getVal(row, 'หน่วยงาน', 'แผนก', 'สังกัด') || 'ไม่ระบุหน่วยงาน';
+        const position = getVal(row, 'ตำแหน่งสายงาน', 'ตำแหน่ง', 'หน้าที่') || '-';
+        const hn = getVal(row, 'HN', 'hn') || '-';
+
         return {
           ...row,
           _index: idx + 1,
-          _fullName: `${row['คำนำหน้า'] || ''}${row['ชื่อ'] || ''} ${row['นามสกุล'] || ''}`.trim(),
-          _unit: (row['หน่วยงาน'] || 'ไม่ระบุหน่วยงาน').trim(),
-          _pos: (row['ตำแหน่งสายงาน'] || '-').trim(),
-          _hn: (row['HN'] || '-').toString().trim(),
-          _hepB: hepBInfo,
-          _varicella: varicellaInfo
+          _fullName: fullName,
+          _unit: unit,
+          _pos: position,
+          _hn: hn,
+          _hepB: classifyHepB(row),
+          _varicella: classifyVaricella(row)
         };
       });
 
       recordCount.textContent = rawStaffData.length.toLocaleString('th-TH');
 
-      // Populate Department Filter dropdown
-      const departments = [...new Set(rawStaffData.map(d => d._unit))].sort((a,b) => a.localeCompare(b, 'th'));
+      // Populate Department Filter dynamically from real records
+      const departments = [...new Set(rawStaffData.map(d => d._unit).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'th'));
       const deptSelect = document.getElementById('filterDepartment');
+      const currentSelectedDept = deptSelect.value;
       deptSelect.innerHTML = '<option value="">ทั้งหมดทุกหน่วยงาน</option>';
       departments.forEach(dept => {
         const opt = document.createElement('option');
@@ -573,8 +608,11 @@
         opt.textContent = dept;
         deptSelect.appendChild(opt);
       });
+      if (departments.includes(currentSelectedDept)) {
+        deptSelect.value = currentSelectedDept;
+      }
 
-      // Apply initial filters & render
+      // Re-apply filters to update KPIs, charts, and table
       applyFilters();
     }
 
@@ -828,6 +866,21 @@
       document.getElementById('detName').textContent = data._fullName;
       document.getElementById('detPositionDept').textContent = `${data._pos} | ${data._unit} | HN: ${data._hn}`;
 
+      const hbsAgVal = getVal(data, 'HbsAg', 'HBsAg', 'HBSAG') || '-';
+      const hbsAbVal = getVal(data, 'HbsAb', 'HBsAb', 'HBSAB') || '-';
+      const hbcAbVal = getVal(data, 'HBcAB', 'HBcAb', 'HBCAB') || '-';
+      const hepB1 = getVal(data, 'Hep B เข็ม 1', 'Hep B เข็ม1', 'HepB1') || '-';
+      const hepB2 = getVal(data, 'Hep B เข็ม 2', 'Hep B เข็ม2', 'HepB2') || '-';
+      const hepB3 = getVal(data, 'Hep B เข็ม 3', 'Hep B เข็ม3', 'HepB3') || '-';
+
+      const var1 = getVal(data, 'สุกใส เข็ม 1', 'สุกใส1') || '-';
+      const var2 = getVal(data, 'สุกใส เข็ม 2', 'สุกใส2') || '-';
+      const varNote = getVal(data, 'หมายเหตุ(สุกใส)', 'หมายเหตุสุกใส') || 'ไม่มีข้อมูล';
+
+      const flu = getVal(data, 'สรุปการได้รับฉีดวัคซีนไข้หวัดใหญ่ - ข้อมูลจาก Occmed/Plan/IC', 'วัคซีนไข้หวัดใหญ่') || 'ยังไม่มีบันทึก';
+      const mmr = getVal(data, 'สรุปการได้รับฉีดวัคซีนรวมป้องกันโรคหัด-คางทูม-หัดเยอรมัน - ข้อมูลจาก Occmed/Plan/IC', 'วัคซีน MMR') || 'ยังไม่มีบันทึก';
+      const tdap = getVal(data, 'สรุปการได้รับฉีดวัคซีนรวมป้องกันโรคบาดทะยัก-คอตีบ-ไอกรนชนิดไร้เซลล์(Tdap) - ข้อมูลจาก Occmed/Plan/IC', 'วัคซีน Tdap') || 'ยังไม่มีบันทึก';
+
       const body = document.getElementById('detBody');
       body.innerHTML = `
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
@@ -837,30 +890,30 @@
           </div>
           <p class="text-slate-600"><strong>ข้อแนะนำสำหรับผู้ดูแล:</strong> ${data._hepB.action}</p>
           <div class="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-200 text-[11px] text-slate-600">
-            <div><strong>HBsAg:</strong> ${data['HbsAg'] || '-'}</div>
-            <div><strong>HBsAb:</strong> ${data['HbsAb'] || '-'}</div>
-            <div><strong>HBcAB:</strong> ${data['HBcAB'] || '-'}</div>
+            <div><strong>HBsAg:</strong> ${hbsAgVal}</div>
+            <div><strong>HBsAb:</strong> ${hbsAbVal}</div>
+            <div><strong>HBcAB:</strong> ${hbcAbVal}</div>
           </div>
           <div class="mt-2 text-[11px] text-slate-500">
             <span>ประวัติฉีด Hep B: </span>
-            เข็ม 1: ${data['Hep B เข็ม 1'] || '-'} | เข็ม 2: ${data['Hep B เข็ม 2'] || '-'} | เข็ม 3: ${data['Hep B เข็ม 3'] || '-'}
+            เข็ม 1: ${hepB1} | เข็ม 2: ${hepB2} | เข็ม 3: ${hepB3}
           </div>
         </div>
 
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
           <p class="font-bold text-slate-700 mb-1 text-xs"><i class="fa-solid fa-viruses text-cyan-600 mr-1"></i>วัคซีนสุกใส (Varicella)</p>
           <p class="text-slate-600 mb-1"><strong>สถานะ:</strong> ${data._varicella.status}</p>
-          <p class="text-slate-500 text-[11px]"><strong>หมายเหตุ:</strong> ${data['หมายเหตุ(สุกใส)'] || 'ไม่มีข้อมูล'}</p>
+          <p class="text-slate-500 text-[11px]"><strong>หมายเหตุ:</strong> ${varNote}</p>
           <div class="mt-2 text-[11px] text-slate-500">
-            เข็ม 1: ${data['สุกใส เข็ม 1'] || '-'} | เข็ม 2: ${data['สุกใส เข็ม 2'] || '-'}
+            เข็ม 1: ${var1} | เข็ม 2: ${var2}
           </div>
         </div>
 
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-[11px] text-slate-600 space-y-1">
           <p class="font-bold text-slate-700 text-xs mb-1">วัคซีนอื่นๆ</p>
-          <p>• <strong>ไข้หวัดใหญ่:</strong> ${data['สรุปการได้รับฉีดวัคซีนไข้หวัดใหญ่ - ข้อมูลจาก Occmed/Plan/IC'] || 'ยังไม่มีบันทึก'}</p>
-          <p>• <strong>หัด-คางทูม-หัดเยอรมัน (MMR):</strong> ${data['สรุปการได้รับฉีดวัคซีนรวมป้องกันโรคหัด-คางทูม-หัดเยอรมัน - ข้อมูลจาก Occmed/Plan/IC'] || 'ยังไม่มีบันทึก'}</p>
-          <p>• <strong>บาดทะยัก-คอตีบ-ไอกรน (Tdap):</strong> ${data['สรุปการได้รับฉีดวัคซีนรวมป้องกันโรคบาดทะยัก-คอตีบ-ไอกรนชนิดไร้เซลล์(Tdap) - ข้อมูลจาก Occmed/Plan/IC'] || 'ยังไม่มีบันทึก'}</p>
+          <p>• <strong>ไข้หวัดใหญ่:</strong> ${flu}</p>
+          <p>• <strong>หัด-คางทูม-หัดเยอรมัน (MMR):</strong> ${mmr}</p>
+          <p>• <strong>บาดทะยัก-คอตีบ-ไอกรน (Tdap):</strong> ${tdap}</p>
         </div>
       `;
 
