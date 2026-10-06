@@ -423,54 +423,106 @@
 
     // Classify Hep B status dynamically from row values
     function classifyHepB(row) {
-      const ag = getVal(row, 'HbsAg', 'HBsAg', 'HBSAG').toLowerCase();
-      const ab = getVal(row, 'HbsAb', 'HBsAb', 'HBSAB').toLowerCase();
-      const summary = getVal(row, 'สรุปการได้รับฉีดวัคซีน Hep B', 'สรุปการได้รับฉีดวัคซีนHepB', 'Hep B สรุป');
+      const ag = getVal(row, 'HbsAg').toLowerCase();
+      const ab = getVal(row, 'HbsAb').toLowerCase();
+      const summary = getVal(row, 'สรุปภูมิ Hep B', 'สรุปการได้รับฉีดวัคซีน Hep B');
+      const intent = getVal(row, 'ประวัติ Hep B และเจตจำนงค์');
+      
+      const dose1 = getVal(row, 'Hep B เข็ม 1');
+      const dose2 = getVal(row, 'Hep B เข็ม 2');
+      const dose3 = getVal(row, 'Hep B เข็ม 3');
 
+      // 1. กลุ่มติดเชื้อ/ส่งต่อรักษา (HBsAg Positive) ยุติการจัดสรรวัคซีน
       if (ag.includes('positive') || ag === 'pos' || ag === '+') {
         return {
           status: 'HBsAg Positive (ส่งต่อรักษา)',
           badge: 'bg-rose-100 text-rose-800 border-rose-200',
           code: 'hbsag_positive',
-          action: 'ส่งพบแพทย์ OccMed / GI เพื่อประเมินการรักษา'
+          action: 'ส่งพบแพทย์ OccMed / GI และ ไม่จัดสรรวัคซีนให้'
         };
       }
 
+      // 2. กลุ่มที่ฉีดครบแล้ว (ตามประวัติเข็ม 3) 
+      if (dose3 || summary.includes('ได้รับครบ') || summary.includes('ฉีดครบ')) {
+        return {
+          status: 'ฉีดครบ 3 เข็มแล้ว',
+          badge: 'bg-blue-100 text-blue-800 border-blue-200',
+          code: 'immune', // จัดเป็นกลุ่มปลอดภัย
+          action: 'ได้รับวัคซีนครบ 3 เข็มแล้ว ไม่ต้องจัดสรรเพิ่ม'
+        };
+      }
+
+      // 3. กลุ่มที่ค้างเข็ม 3 (มีเข็ม 2 แต่ไม่มีเข็ม 3)
+      if (dose2 && !dose3) {
+        return {
+          status: 'รอรับเข็ม 3',
+          badge: 'bg-orange-100 text-orange-800 border-orange-200',
+          code: 'in_progress',
+          action: `ติดตามฉีดเข็ม 3 (อ้างอิงเข็ม 2: ${dose2})`
+        };
+      }
+
+      // 4. กลุ่มที่ค้างเข็ม 2 (มีเข็ม 1 แต่ไม่มีเข็ม 2)
+      if (dose1 && !dose2) {
+        return {
+          status: 'รอรับเข็ม 2',
+          badge: 'bg-amber-100 text-amber-800 border-amber-200',
+          code: 'in_progress',
+          action: `ติดตามฉีดเข็ม 2 (อ้างอิงเข็ม 1: ${dose1})`
+        };
+      }
+
+      // 5. กลุ่มที่มีภูมิคุ้มกันแล้ว (จากผลเลือด HBsAb หรือ สรุป)
       if (ab.includes('positive') || ab === 'pos' || ab === '+' || summary.includes('มีภูมิคุ้มกันแล้ว')) {
         return {
           status: 'มีภูมิคุ้มกันแล้ว',
           badge: 'bg-emerald-100 text-emerald-800 border-emerald-200',
           code: 'immune',
-          action: 'ภูมิคุ้มกันพร้อมปฏิบัติงาน ปลอดภัย'
+          action: 'มีภูมิคุ้มกันแล้ว ไม่ได้รับการจัดสรรวัคซีนอีก'
         };
       }
 
-      if (ab.includes('negative') || ab === 'neg' || ab === '-' || ab.includes('weakly')) {
-        if (summary && !summary.includes('จำไม่ได้') && summary !== '-') {
-          return {
-            status: 'กำลังรับวัคซีน/มีประวัติฉีด',
-            badge: 'bg-sky-100 text-sky-800 border-sky-200',
-            code: 'in_progress',
-            action: 'ติดตามผลเข็มถัดไป หรือนัดเจาะเลือดประเมินซ้ำ'
-          };
-        }
+      // 6. กลุ่มที่เคยรับจัดสรรแล้วในปีเก่าๆ หรือมีข้อความอื่นๆ ในสรุปภูมิ
+      if (summary.includes('รับจัดสรรวัคซีนแล้วในปี') || summary.includes('รับด้วยตัวเองแล้ว')) {
+         return {
+          status: 'ประวัติเคยรับวัคซีนแล้ว',
+          badge: 'bg-slate-200 text-slate-800 border-slate-300',
+          code: 'immune', 
+          action: summary
+        };
+      }
+
+      // 7. กลุ่มปฏิเสธรับวัคซีน
+      if (intent.includes('ไม่ต้องการ') || intent.includes('ไม่ขอรับ')) {
+         return {
+          status: 'ปฏิเสธการรับวัคซีน',
+          badge: 'bg-slate-100 text-slate-500 border-slate-200',
+          code: 'unknown',
+          action: 'ทำเอกสารยินยอมไม่รับวัคซีน'
+        };
+      }
+
+      // 8. กลุ่มที่ตามแล้วไม่มา
+      if (summary.includes('ตามแล้วไม่มาฉีด')) {
+         return {
+          status: 'ติดตามแล้วไม่มา',
+          badge: 'bg-rose-50 text-rose-600 border-rose-200',
+          code: 'need_vaccine',
+          action: 'พิจารณาติดตามซ้ำ หรือลงบันทึกปฏิเสธ'
+        };
+      }
+
+      // 9. กลุ่มที่ต้องการขอรับวัคซีน / ไม่มีภูมิ
+      if (ab.includes('negative') || ab === 'neg' || ab === '-' || intent.includes('ต้องการขอรับ') || intent.includes('เพื่อขอรับวัคซีน')) {
         return {
           status: 'ไม่มีภูมิ (ต้องรับวัคซีน)',
           badge: 'bg-amber-100 text-amber-800 border-amber-200',
           code: 'need_vaccine',
-          action: 'นัดหมายฉีดวัคซีน Hep B ด่วน'
+          action: 'เป้าหมายนัดหมายฉีดวัคซีน Hep B เข็มที่ 1'
         };
       }
 
-      if (summary.includes('มีภูมิคุ้มกันแล้ว')) {
-        return {
-          status: 'มีภูมิคุ้มกันแล้ว',
-          badge: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-          code: 'immune',
-          action: 'ภูมิคุ้มกันพร้อมปฏิบัติงาน'
-        };
-      }
-
+      // 10. กรณีอื่นๆ (รอคัดกรอง)
       return {
         status: 'ยังไม่มีข้อมูล/รอคัดกรอง',
         badge: 'bg-slate-100 text-slate-600 border-slate-200',
@@ -481,10 +533,12 @@
 
     // Classify Varicella status dynamically from row values
     function classifyVaricella(row) {
-      const summary = getVal(row, 'สรุปการได้รับฉีดวัคซีนสุกใส (ระบุปีที่ฉีดเข็ม 1) - ข้อมูลจาก Occmed/Plan/IC', 'สรุปการได้รับฉีดวัคซีนสุกใส', 'วัคซีนสุกใส');
-      const note = getVal(row, 'หมายเหตุ(สุกใส)', 'หมายเหตุสุกใส', 'หมายเหตุ');
-      const dose1 = getVal(row, 'สุกใส เข็ม 1', 'สุกใสเข็ม 1', 'สุกใส1');
+      const summary = getVal(row, 'สรุปการได้รับฉีดวัคซีนสุกใส (ระบุปีที่ฉีดเข็ม 1) - ข้อมูลจาก Occmed/Plan/IC');
+      const note = getVal(row, 'หมายเหตุ(สุกใส)');
+      const dose1 = getVal(row, 'สุกใส เข็ม 1');
+      const dose2 = getVal(row, 'สุกใส เข็ม 2');
 
+      // 1. มีภูมิคุ้มกันแล้ว (เคยป่วย / ตรวจเจอภูมิ)
       if (summary.includes('มีภูมิคุ้มกันแล้ว') || note.includes('เคยป่วย') || note.includes('มีภูมิ')) {
         return {
           status: 'มีภูมิคุ้มกันแล้ว (เคยป่วย/ฉีดแล้ว)',
@@ -492,13 +546,35 @@
           code: 'immune'
         };
       }
+      
+      // 2. ฉีดครบ 2 เข็มแล้ว
+      if (dose2 || summary.includes('ได้รับครบ') || summary.includes('2 เข็ม')) {
+        return {
+          status: 'ฉีดครบ 2 เข็มแล้ว',
+          badge: 'bg-blue-100 text-blue-800 border-blue-200',
+          code: 'immune' // ถือว่าปลอดภัยแล้ว
+        };
+      }
+
+      // 3. รอเข็ม 2 (มีเข็ม 1 แต่ยังไม่มีเข็ม 2)
+      if (dose1 && !dose2) {
+        return {
+          status: 'รอรับเข็ม 2',
+          badge: 'bg-amber-100 text-amber-800 border-amber-200',
+          code: 'in_progress'
+        };
+      }
+
+      // 4. ได้รับแล้วในอดีต (ไม่ระบุเข็มชัดเจน แต่มีประวัติ)
       if (dose1 || summary.includes('25') || summary.includes('ได้รับแล้ว') || summary.includes('ฉีด')) {
         return {
-          status: 'ฉีดแล้ว',
+          status: 'ประวัติเคยฉีดแล้ว',
           badge: 'bg-cyan-100 text-cyan-800 border-cyan-200',
           code: 'vaccinated'
         };
       }
+
+      // 5. รอตรวจสอบ
       return {
         status: 'ยังไม่มีข้อมูล/รอตรวจสอบ',
         badge: 'bg-slate-100 text-slate-600 border-slate-200',
