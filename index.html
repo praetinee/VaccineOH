@@ -1019,6 +1019,14 @@
          document.getElementById('modalDetail').classList.add('hidden');
       });
 
+      // ผูก Event Input Masking ให้ช่องวันที่ (ถ้าช่องนั้นถูกสร้างขึ้นมาให้กรอก)
+      ['editHepB1', 'editHepB2', 'editHepB3', 'editVar1', 'editVar2'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el && el.tagName === 'INPUT' && el.type === 'text') {
+              el.addEventListener('input', formatDateInput);
+          }
+      });
+
       document.getElementById('modalDetail').classList.remove('hidden');
     };
     // --- ฟังก์ชันบันทึกข้อมูลไป Google Sheets ผ่าน API ---
@@ -1031,6 +1039,18 @@
        if(!password) {
           alert('กรุณาใส่รหัสผ่านก่อนบันทึกข้อมูล');
           return;
+       }
+
+       // ตรวจสอบความถูกต้องของวันที่ (ปีต้องเป็น 25XX)
+       const hepB1 = document.getElementById('editHepB1').value;
+       const hepB2 = document.getElementById('editHepB2').value;
+       const hepB3 = document.getElementById('editHepB3').value;
+       const var1 = document.getElementById('editVar1').value;
+       const var2 = document.getElementById('editVar2').value;
+
+       if (!validateDateString(hepB1) || !validateDateString(hepB2) || !validateDateString(hepB3) || !validateDateString(var1) || !validateDateString(var2)) {
+           alert('กรุณากรอกวันที่ให้ครบถ้วนในรูปแบบ วัน/เดือน/ปี(พ.ศ.) เช่น 10/08/2569');
+           return; // หยุดการทำงาน ไม่ส่งข้อมูล
        }
 
        statusText.textContent = "กำลังบันทึก...";
@@ -1158,6 +1178,32 @@
       // Initial Data Fetch
       loadData();
     });
+    // --- ฟังก์ชันจัดรูปแบบวันที่ให้อัตโนมัติ (DD/MM/YYYY) ---
+    function formatDateInput(e) {
+      const input = e.target;
+      let val = input.value.replace(/\D/g, ''); // ลบตัวอักษรที่ไม่ใช่ตัวเลขออกให้หมด
+
+      if (val.length > 8) val = val.substring(0, 8); // บังคับรับแค่ 8 ตัว (DDMMYYYY)
+
+      if (val.length > 4) {
+        // มีครบทั้ง วัน เดือน ปี
+        input.value = `${val.substring(0, 2)}/${val.substring(2, 4)}/${val.substring(4, 8)}`;
+      } else if (val.length > 2) {
+        // มีแค่วัน กับ เดือน
+        input.value = `${val.substring(0, 2)}/${val.substring(2, 4)}`;
+      } else {
+        // มีแค่วัน
+        input.value = val;
+      }
+    }
+
+    // ฟังก์ชันตรวจสอบความถูกต้องของวันที่ก่อนบันทึก
+    function validateDateString(dateStr) {
+      if (!dateStr || dateStr.trim() === '') return true; // ว่างได้ (อนุญาต)
+      // เช็กรูปแบบว่าต้องเป็น XX/XX/25XX (ตัวเลข 2/2/4 ตัว)
+      const regex = /^\d{2}\/\d{2}\/25\d{2}$/;
+      return regex.test(dateStr);
+    }
   </script>
 </body>
 </html>
