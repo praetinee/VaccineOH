@@ -717,7 +717,7 @@
       const ctxHepB = document.getElementById('chartHepB').getContext('2d');
       chartHepBInstance = new Chart(ctxHepB, {
         type: 'doughnut',
-        plugins: [ChartDataLabels], // เปิดใช้ปลั๊กอินสำหรับกราฟนี้
+        plugins: [ChartDataLabels],
         data: {
           labels: ['มีภูมิแล้ว', 'ต้องรับวัคซีน', 'กำลังฉีด/ประวัติ', 'Positive', 'ยังไม่ตรวจ'],
           datasets: [{
@@ -741,29 +741,7 @@
               formatter: (value, ctx) => {
                 let sum = ctx.chart._metasets[0].total;
                 let percentage = sum > 0 ? (value * 100 / sum).toFixed(1) + "%" : "0%";
-                // แสดงเฉพาะเปอร์เซ็นต์ที่มากกว่า 3% เพื่อไม่ให้ข้อความทับกัน
                 return value > (sum * 0.03) ? percentage : null; 
-              }
-            }
-          }
-        }
-      });
-          datasets: [{
-            data: [hepBCounts.immune, hepBCounts.need, hepBCounts.progress, hepBCounts.pos, hepBCounts.unknown],
-            backgroundColor: ['#10b981', '#f59e0b', '#0284c7', '#f43f5e', '#cbd5e1'],
-            borderWidth: 2,
-            borderColor: '#ffffff'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                boxWidth: 12,
-                font: { family: 'Chakra Petch', size: 11 }
               }
             }
           }
@@ -781,11 +759,12 @@
       const ctxVar = document.getElementById('chartVaricella').getContext('2d');
       chartVaricellaInstance = new Chart(ctxVar, {
         type: 'doughnut',
+        plugins: [ChartDataLabels],
         data: {
           labels: ['มีภูมิ (เคยป่วย/ฉีดแล้ว)', 'ฉีดแล้ว', 'รอตรวจสอบ'],
           datasets: [{
             data: [varCounts.immune, varCounts.vac, varCounts.unknown],
-            backgroundColor: ['#0d9488', '#06b6d4', '#e2e8f0'],
+            backgroundColor: ['#0d9488', '#06b6d4', '#cbd5e1'],
             borderWidth: 2,
             borderColor: '#ffffff'
           }]
@@ -796,9 +775,15 @@
           plugins: {
             legend: {
               position: 'bottom',
-              labels: {
-                boxWidth: 12,
-                font: { family: 'Chakra Petch', size: 11 }
+              labels: { boxWidth: 12, font: { family: 'Chakra Petch', size: 11 } }
+            },
+            datalabels: {
+              color: '#fff',
+              font: { family: 'Chakra Petch', weight: 'bold', size: 12 },
+              formatter: (value, ctx) => {
+                let sum = ctx.chart._metasets[0].total;
+                let percentage = sum > 0 ? (value * 100 / sum).toFixed(1) + "%" : "0%";
+                return value > (sum * 0.03) ? percentage : null; 
               }
             }
           }
