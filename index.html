@@ -907,14 +907,31 @@
       const hbsAgVal = getVal(data, 'HbsAg') || '-';
       const hbsAbVal = getVal(data, 'HbsAb') || '-';
       const hbcAbVal = getVal(data, 'HBcAB') || '-';
-      const hepB1 = getVal(data, 'Hep B เข็ม 1') || '';
-      const hepB2 = getVal(data, 'Hep B เข็ม 2') || '';
-      const hepB3 = getVal(data, 'Hep B เข็ม 3') || '';
+      
+      const hepB1 = getVal(data, 'Hep B เข็ม 1');
+      const hepB2 = getVal(data, 'Hep B เข็ม 2');
+      const hepB3 = getVal(data, 'Hep B เข็ม 3');
       const hepB_summary = getVal(data, 'สรุปภูมิ Hep B') || '';
 
-      const var1 = getVal(data, 'สุกใส เข็ม 1') || '-';
-      const var2 = getVal(data, 'สุกใส เข็ม 2') || '-';
+      const var1 = getVal(data, 'สุกใส เข็ม 1');
+      const var2 = getVal(data, 'สุกใส เข็ม 2');
       const varNote = getVal(data, 'หมายเหตุ(สุกใส)') || 'ไม่มีข้อมูล';
+
+      const flu = getVal(data, 'สรุปการได้รับฉีดวัคซีนไข้หวัดใหญ่ - ข้อมูลจาก Occmed/Plan/IC') || 'ยังไม่มีบันทึก';
+      const mmr = getVal(data, 'สรุปการได้รับฉีดวัคซีนรวมป้องกันโรคหัด-คางทูม-หัดเยอรมัน - ข้อมูลจาก Occmed/Plan/IC') || 'ยังไม่มีบันทึก';
+      const tdap = getVal(data, 'สรุปการได้รับฉีดวัคซีนรวมป้องกันโรคบาดทะยัก-คอตีบ-ไอกรนชนิดไร้เซลล์(Tdap) - ข้อมูลจาก Occmed/Plan/IC') || 'ยังไม่มีบันทึก';
+
+      // --- ฟังก์ชันสร้างช่องกรอก หรือ ล็อกช่องที่เคยกรอกแล้ว ---
+      const renderInput = (id, value, placeholder) => {
+          if (value && value !== '-') {
+              // ถ้ามีข้อมูลอยู่แล้ว ให้แสดงเป็นตัวอักษร ธรรมดา (ล็อกการแก้)
+              return `<span class="block px-2 py-1 bg-slate-100 border border-slate-200 rounded text-slate-500">${value}</span>
+                      <input type="hidden" id="${id}" value="${value}">`;
+          } else {
+              // ถ้ายังไม่มีข้อมูล ให้แสดงเป็นช่องกรอก
+              return `<input type="text" id="${id}" value="" class="w-full px-2 py-1 border border-slate-300 rounded focus:ring-1 focus:ring-teal-500 text-xs bg-white" placeholder="${placeholder}">`;
+          }
+      };
 
       const body = document.getElementById('detBody');
       body.innerHTML = `
@@ -923,8 +940,9 @@
              <p class="font-bold text-slate-700 text-xs"><i class="fa-solid fa-shield-virus text-teal-600 mr-1"></i>อัปเดตประวัติ ไวรัสตับอักเสบบี</p>
              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${data._hepB.badge}">${data._hepB.status}</span>
           </div>
+          <p class="text-slate-600 mb-2"><strong>ข้อแนะนำสำหรับผู้ดูแล:</strong> ${data._hepB.action}</p>
           
-          <div class="grid grid-cols-3 gap-2 text-[11px] text-slate-600 mb-2">
+          <div class="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-200 text-[11px] text-slate-600 mb-2">
             <div><strong>HBsAg:</strong> ${hbsAgVal}</div>
             <div><strong>HBsAb:</strong> ${hbsAbVal}</div>
             <div><strong>HBcAB:</strong> ${hbcAbVal}</div>
@@ -934,15 +952,15 @@
             <div class="grid grid-cols-3 gap-2">
                <div>
                   <label class="block text-[10px] font-medium text-slate-500 mb-0.5">วันที่เข็ม 1</label>
-                  <input type="text" id="editHepB1" value="${hepB1}" class="w-full px-2 py-1 border border-slate-300 rounded focus:ring-1 focus:ring-teal-500 text-xs" placeholder="วว/ดด/ปปปป">
+                  ${renderInput('editHepB1', hepB1, 'วว/ดด/ปปปป')}
                </div>
                <div>
                   <label class="block text-[10px] font-medium text-slate-500 mb-0.5">วันที่เข็ม 2</label>
-                  <input type="text" id="editHepB2" value="${hepB2}" class="w-full px-2 py-1 border border-slate-300 rounded focus:ring-1 focus:ring-teal-500 text-xs" placeholder="วว/ดด/ปปปป">
+                  ${renderInput('editHepB2', hepB2, 'วว/ดด/ปปปป')}
                </div>
                <div>
                   <label class="block text-[10px] font-medium text-slate-500 mb-0.5">วันที่เข็ม 3</label>
-                  <input type="text" id="editHepB3" value="${hepB3}" class="w-full px-2 py-1 border border-slate-300 rounded focus:ring-1 focus:ring-teal-500 text-xs" placeholder="วว/ดด/ปปปป">
+                  ${renderInput('editHepB3', hepB3, 'วว/ดด/ปปปป')}
                </div>
             </div>
             <div>
@@ -952,12 +970,32 @@
           </div>
         </div>
 
-        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
-          <p class="font-bold text-slate-700 mb-1 text-xs"><i class="fa-solid fa-viruses text-cyan-600 mr-1"></i>วัคซีนสุกใส (ดูข้อมูลได้อย่างเดียว)</p>
-          <div class="mt-1 text-[11px] text-slate-500">
-            เข็ม 1: ${var1} | เข็ม 2: ${var2} <br>
-            หมายเหตุ: ${varNote}
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mt-3">
+          <div class="flex items-center justify-between mb-2">
+             <p class="font-bold text-slate-700 text-xs"><i class="fa-solid fa-viruses text-cyan-600 mr-1"></i>อัปเดตประวัติ วัคซีนสุกใส (Varicella)</p>
+             <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${data._varicella.badge}">${data._varicella.status}</span>
           </div>
+          
+          <div class="space-y-2 mt-2 pt-2 border-t border-slate-200 text-xs">
+            <div class="grid grid-cols-2 gap-2">
+               <div>
+                  <label class="block text-[10px] font-medium text-slate-500 mb-0.5">วันที่เข็ม 1</label>
+                  ${renderInput('editVar1', var1, 'วว/ดด/ปปปป')}
+               </div>
+               <div>
+                  <label class="block text-[10px] font-medium text-slate-500 mb-0.5">วันที่เข็ม 2</label>
+                  ${renderInput('editVar2', var2, 'วว/ดด/ปปปป')}
+               </div>
+            </div>
+          </div>
+          <p class="text-slate-500 text-[11px] mt-2"><strong>หมายเหตุเดิม:</strong> ${varNote}</p>
+        </div>
+
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-[11px] text-slate-600 space-y-1 mt-3">
+          <p class="font-bold text-slate-700 text-xs mb-1">วัคซีนอื่นๆ</p>
+          <p>• <strong>ไข้หวัดใหญ่:</strong> ${flu}</p>
+          <p>• <strong>หัด-คางทูม-หัดเยอรมัน (MMR):</strong> ${mmr}</p>
+          <p>• <strong>บาดทะยัก-คอตีบ-ไอกรน (Tdap):</strong> ${tdap}</p>
         </div>
       `;
 
@@ -985,7 +1023,6 @@
     };
     // --- ฟังก์ชันบันทึกข้อมูลไป Google Sheets ผ่าน API ---
     window.saveDataToSheet = async function() {
-       // URL ของ Web App จาก Apps Script ที่คุณให้มา
        const API_URL = "https://script.google.com/macros/s/AKfycbzq8FXsXYTQoGwnOcOm5gbvoa1LUXcZgPZUf-LDGo0BxUKRCoQyHanes-N01RsTvGe0/exec"; 
        
        const password = document.getElementById('adminPassword').value;
@@ -1006,14 +1043,15 @@
           hepB1: document.getElementById('editHepB1').value,
           hepB2: document.getElementById('editHepB2').value,
           hepB3: document.getElementById('editHepB3').value,
-          hepB_summary: document.getElementById('editHepBSummary').value
+          hepB_summary: document.getElementById('editHepBSummary').value,
+          var1: document.getElementById('editVar1').value, // เพิ่มตัวแปรสุกใสเข็ม 1
+          var2: document.getElementById('editVar2').value  // เพิ่มตัวแปรสุกใสเข็ม 2
        };
 
        try {
-          // แจ้งให้เว็บแอปไม่ตรวจสอบ CORS เวลาส่งแบบ no-cors อาจจะต้องรอผล (วิธีที่ปลอดภัยที่สุดสำหรับการทำ Web App สไตล์นี้)
           const response = await fetch(API_URL, {
              method: 'POST',
-             body: JSON.stringify(payload) // ไม่ต้องใส่ headers ตรงนี้เพื่อหลีกเลี่ยง CORS Preflight Request
+             body: JSON.stringify(payload)
           });
           
           const result = await response.json();
@@ -1022,7 +1060,6 @@
              statusText.classList.remove('text-amber-500');
              statusText.classList.add('text-emerald-600');
              
-             // โหลดข้อมูลสดๆ จากชีตใหม่มาแสดงผลทันที
              setTimeout(() => {
                 document.getElementById('modalDetail').classList.add('hidden');
                 loadData(); 
@@ -1033,12 +1070,10 @@
              statusText.classList.add('text-rose-600');
           }
        } catch (e) {
-          // ถึงแม้จะมี Error เรื่อง Network CORS แต่ถ้าฝั่ง Sheet บันทึกได้ เราถือว่าผ่าน
           statusText.textContent = "เชื่อมต่อติดขัด แต่คำสั่งถูกส่งแล้ว";
           statusText.classList.remove('text-amber-500');
           statusText.classList.add('text-rose-600');
           console.error(e);
-          // โหลดข้อมูลเพื่อเช็กว่ามันเปลี่ยนในชีตจริงๆ ไหม
           setTimeout(() => {
                 loadData(); 
           }, 2000);
